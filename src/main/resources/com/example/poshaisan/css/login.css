@@ -1,0 +1,20 @@
+.bg-right-pane{
+-fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925);
+-fx-spacing: 40px;
+-fx-padding: 0 80px;
+}
+
+.image{
+-fx-background-image: url("./test.jpg");
+-fx-background-size: cover;
+-fx-background-repeat: no-repeat;
+-fx-background-position: right;
+
+}
+.login-input{
+    -fx-font-size: 18px
+}
+
+.login-btn{
+    -fx-background-color:  edaf34;
+}

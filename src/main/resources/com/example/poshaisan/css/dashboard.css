@@ -1,0 +1,102 @@
+.vbox-container{
+    -fx-padding: 40px;
+    -fx-spacing: 40px;
+    -fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925);
+}
+
+.header-text{
+    -fx-text-fill: #d62734;
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+}
+
+.header-description{
+    -fx-text-fill:  #a1a0a0;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+.card {
+    -fx-background-color: white;
+    -fx-border-color: #cccccc;
+    -fx-border-radius: 10px;
+    -fx-background-radius: 10px;
+    -fx-padding: 20px;
+    -fx-spacing: 10px;
+    -fx-effect: dropshadow(three-pass-box, rgba(0,0,0,0.1), 10, 0, 0, 10);
+}
+
+.card-title{
+-fx-text-fill: #d62734;
+-fx-font-weight: bold;
+-fx-font-size :18px;
+}
+
+.card-description{
+-fx-text-fill: black;
+-fx-font-weight: bold;
+-fx-font-size :18px;
+}
+
+.scroll-pane {
+    -fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925)
+}
+
+.scroll-pane .viewport {
+    -fx-background: transparent;
+}
+
+
+.line-chart .chart-title {
+    -fx-text-fill: #d62734;
+    -fx-font-weight: bold;
+    -fx-font-size: 18;
+}
+
+.line-chart .chart-legend-item {
+    -fx-text-fill: black;
+}
+
+.line-chart .chart-legend-item-symbol {
+    -fx-background-color: transparent;
+
+}
+
+.line-chart .axis-label {
+    -fx-text-fill: black;
+
+}
+
+.line-chart .axis-tick-mark {
+    -fx-stroke: black;
+}
+
+.line-chart .axis {
+    -fx-tick-label-fill: black;
+    -fx-font-weight: bold;
+
+}
+
+.pie-chart .chart-title {
+    -fx-text-fill: #d62734;
+        -fx-font-weight: bold;
+        -fx-font-size: 18;
+}
+
+.pie-chart .chart-legend-item {
+    -fx-text-fill: black;
+    -fx-font-weight: bold;
+}
+
+
+
+.pie-chart .chart-pie-label {
+    -fx-text-fill: #0000ff;
+    -fx-font-weight: bold;
+}
+
+.btn{
+    -fx-background-color:  edaf34;
+    -fx-font-weight: bold;
+    -fx-cursor: hand;
+}

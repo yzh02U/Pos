@@ -1,0 +1,23 @@
+.sidebar-outer-vbox{
+-fx-background-color: #8B0000;
+-fx-spacing: 0;
+}
+
+
+
+.sidebar-header-text{
+-fx-font-size: 20px;
+-fx-font-weight: bold;
+}
+.sidebar-button{
+-fx-background-color: transparent;
+-fx-font-size: 18px;
+-fx-padding: 24px 0 24px 0;
+-fx-cursor: hand;
+}
+
+.sidebar-button:hover{
+-fx-opacity: 50%;
+-fx-background-color: #30070a;
+
+}

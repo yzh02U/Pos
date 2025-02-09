@@ -1,0 +1,93 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.geometry.Insets?>
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.ScrollPane?>
+<?import javafx.scene.control.Tab?>
+<?import javafx.scene.control.TabPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.FlowPane?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<?import javafx.scene.layout.Pane?>
+<?import javafx.scene.layout.AnchorPane?>
+<VBox fx:id="salesSection" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" styleClass="vbox-container" stylesheets="@css/sales.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.poshaisan.SalesController">
+    <VBox prefHeight="80.0" prefWidth="520.0" spacing="8.0">
+        <Label fx:id="headerTitle" styleClass="header-text" text="Sección de Ventas" />
+        <Label styleClass="header-description" text="Aquí podrás registrar las ventas para llevar y las de consumo en el local" />
+    </VBox>
+    <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" styleClass="sale-pane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+        <Tab fx:id="tablesTab" closable="false" text="Mesas">
+            <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="100.0">
+                <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="354.0" prefViewportHeight="800.0" prefWidth="720.0" VBox.vgrow="ALWAYS">
+                    <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="705.0" styleClass="border-pane">
+                        <top>
+                            <Button fx:id="addTableBtn" mnemonicParsing="false" onAction="#showAddOrder" prefHeight="51.0" prefWidth="150.0" styleClass="add-order-btn" text="Nueva Mesa" BorderPane.alignment="TOP_LEFT">
+                                <BorderPane.margin>
+                                    <Insets bottom="30.0" top="30.0" />
+                                </BorderPane.margin>
+                                <font>
+                                    <Font size="14.0" />
+                                </font>
+                            </Button>
+                        </top>
+                        <center>
+                            <FlowPane fx:id="tablesFlowPane" hgap="30.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" vgap="30.0" BorderPane.alignment="CENTER">
+                                <BorderPane.margin>
+                                    <Insets />
+                                </BorderPane.margin>
+                                <padding>
+                                    <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                                </padding>
+                            </FlowPane>
+
+                            <!--
+                            <AnchorPane fx:id="TableUI"   xmlns="http://javafx.com/javafx/8"
+                                        xmlns:fx="http://javafx.com/fxml/1"
+                                        prefWidth="600" prefHeight="400">
+
+                            </AnchorPane>
+                            -->
+                        </center>
+                    </BorderPane>
+                </ScrollPane>
+            </VBox>
+        </Tab>
+        <Tab fx:id="ordersTab" closable="false" text="Para llevar">
+            <VBox prefHeight="200.0" prefWidth="100.0">
+            <children>
+               <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="354.0" prefViewportHeight="800.0" prefWidth="720.0">
+                  <content>
+                     <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="705.0" styleClass="border-pane">
+                        <top>
+                           <Button fx:id="addOrderBtn" mnemonicParsing="false" onAction="#loadOrder" prefHeight="51.0" prefWidth="150.0" styleClass="add-order-btn" text="Nuevo Pedido" BorderPane.alignment="TOP_LEFT">
+                              <BorderPane.margin>
+                                 <Insets bottom="30.0" top="30.0" />
+                              </BorderPane.margin>
+                              <font>
+                                 <Font size="14.0" />
+                              </font>
+                           </Button>
+                        </top>
+                        <center>
+                           <FlowPane fx:id="takeoutsFlowPane" hgap="30.0" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" vgap="30.0" BorderPane.alignment="CENTER">
+                              <BorderPane.margin>
+                                 <Insets />
+                              </BorderPane.margin>
+                              <padding>
+                                 <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                              </padding>
+                           </FlowPane>
+
+
+                        </center>
+                     </BorderPane>
+                  </content>
+               </ScrollPane>
+            </children>
+            </VBox>
+        </Tab>
+    </TabPane>
+</VBox>

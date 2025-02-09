@@ -1,0 +1,120 @@
+.vbox-container{
+    -fx-padding: 40px;
+    -fx-spacing: 40px;
+    -fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925);
+}
+
+.header-text{
+    -fx-text-fill: #d62734;
+    -fx-font-size: 32px;
+    -fx-font-weight: bold;
+}
+
+.header-description{
+    -fx-text-fill:  #a1a0a0;
+    -fx-font-size: 18px;
+    -fx-font-weight: bold;
+}
+
+
+
+/* Tab Pane */
+.sale-pane>*.tab-header-area>*.tab-header-background
+{
+   -fx-background-color: transparent;
+}
+
+.tab-pane:top *.tab-header-area {
+ /* -fx-padding: 0.416667em 0.166667em 0.0em 0.833em; /* 5 2 0 10 */
+        -fx-padding: 0.416667em 0.166667em 0.0em 0.0em; /* overridden as 5 2 0 0 */
+    }
+
+.tab .tab-label {
+    -fx-background-color: transparent;
+    -fx-font-size: 18px; /* all the same except this newly added one */
+    -fx-text-fill: #a1a0a0;
+    -fx-font-weight: bold;
+}
+
+.tab{
+-fx-pref-height: 40;
+    -fx-background-color: transparent;
+-fx-border-width: 0 0 4 0;
+ -fx-focus-color: transparent;
+    -fx-faint-focus-color: transparent;
+}
+
+
+.tab:hover{
+-fx-cursor: hand;
+}
+
+.tab:selected {
+    -fx-border-color: #d62734;
+     -fx-focus-color: transparent;
+        -fx-faint-focus-color: transparent;
+    }
+}
+
+/* Tables Section */
+
+.add-order-btn{
+    -fx-background-color:  edaf34;
+    -fx-font-weight: bold;
+    -fx-font-size: 14px;
+}
+
+.add-order-btn:hover{
+    -fx-cursor: hand;
+
+}
+
+/* Border Pane*/
+
+.border-pane{
+-fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925);
+-fx-border-width: 0;
+
+}
+
+
+.scroll-pane {
+    -fx-background-color: transparent;
+    -fx-border-color: transparent;
+    -fx-padding: 0;
+}
+
+/* VBox */
+.vbox-inner-container{
+-fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925);
+}
+
+.table-container{
+    -fx-background-color: white;
+    -fx-padding: 20 10 20 10;
+    -fx-spacing: 10;
+    -fx-border-color: black;
+    -fx-border-width: 1px;
+    -fx-background-radius: 10px;
+    -fx-border-radius: 10px;
+}
+
+.table-container:hover{
+    -fx-cursor: hand;
+}
+
+.table-name-label{
+    -fx-max-width: Infinity;
+    -fx-alignment: center;
+    -fx-font-size: 16px;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+}
+
+.table-server-label{
+    -fx-max-width: Infinity;
+    -fx-alignment: center;
+    -fx-font-size: 12px;
+    -fx-font-weight: bold;
+    -fx-text-alignment: center;
+}

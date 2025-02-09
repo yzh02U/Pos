@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.VBox?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:id="inventorySection" maxHeight="1.7976931348623157E308"
+      maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="608.0" prefWidth="466.0"
+      styleClass="vbox-container" stylesheets="@css/inventory.css" xmlns="http://javafx.com/javafx/21"
+      fx:controller="com.example.poshaisan.InventoryController">
+    <VBox prefHeight="22.0" prefWidth="200.0" spacing="8.0">
+        <Label styleClass="header-text" text="Sección de Inventario"/>
+        <Label styleClass="header-description" text="Aquí podrás agregar, modificar o eliminar un producto"/>
+    </VBox>
+    <Button fx:id="addProductBtn" mnemonicParsing="false" onAction="#showAddProductView" prefHeight="51.0"
+            prefWidth="139.0" styleClass="btn" text="Agregar producto"/>
+    <TextField fx:id="filterInput" prefHeight="48.0" prefWidth="386.0" promptText="Buscar producto"
+               styleClass="inventory-input"/>
+    <TableView fx:id="inventoryTable" prefHeight="200.0" prefWidth="200.0" VBox.vgrow="ALWAYS">
+        <columns>
+            <TableColumn fx:id="itemNameColumn" prefWidth="75.0" styleClass="nameCol" text="Nombre"/>
+            <TableColumn fx:id="itemPriceColumn" prefWidth="75.0" styleClass="priceCol" text="Precio"/>
+            <TableColumn fx:id="itemTypeColumn" prefWidth="75.0" styleClass="typeCol" text="Tipo"/>
+            <TableColumn fx:id="itemDeleteColumn" prefWidth="75.0" styleClass="actionCol" text="Acción"/>
+        </columns>
+        <columnResizePolicy>
+            <TableView fx:constant="CONSTRAINED_RESIZE_POLICY"/>
+        </columnResizePolicy>
+    </TableView>
+</VBox>

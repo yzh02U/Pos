@@ -1,0 +1,57 @@
+.vbox-container{
+    -fx-padding: 40px;
+    -fx-spacing: 30px;
+    -fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925);
+}
+
+.input-header-container{
+    -fx-spacing: 12px;
+}
+.input-label{
+    -fx-text-fill: white;
+    -fx-font-size: 18px;
+}
+
+.input-warning{
+    -fx-text-fill: #d62734;
+    -fx-font-size: 14px;
+    -fx-font-weight: bold;
+}
+
+.inputs-container{
+    -fx-spacing: 40px;
+}
+
+.header-text{
+    -fx-text-fill: #d62734;
+    -fx-font-weight: bold;
+    -fx-font-size: 32px;
+}
+
+.actions-container{
+-fx-spacing: 40px;
+}
+
+.add-product-input{
+-fx-font-size: 18px;
+}
+
+.btn-cancel{
+    -fx-font-weight: bold;
+    -fx-background-color: #f23543;
+}
+
+.btn-confirm{
+    -fx-font-weight: bold;
+    -fx-background-color: #3bdb4b;
+}
+
+.comboBox-input{
+ -fx-font-size: 16px;
+ -fx-backgorund-color: white;
+}
+
+.combo-box:empty .text {
+    -fx-fill: gray; /* Color del placeholder */
+}
+

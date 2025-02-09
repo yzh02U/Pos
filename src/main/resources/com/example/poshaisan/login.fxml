@@ -1,0 +1,40 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.Button?>
+<?import javafx.scene.control.Label?>
+<?import javafx.scene.control.PasswordField?>
+<?import javafx.scene.control.TextField?>
+<?import javafx.scene.layout.AnchorPane?>
+<?import javafx.scene.layout.BorderPane?>
+<?import javafx.scene.layout.HBox?>
+<?import javafx.scene.layout.VBox?>
+<?import javafx.scene.text.Font?>
+
+<BorderPane fx:id="loginSection" maxHeight="-Infinity" maxWidth="-Infinity" minHeight="-Infinity" minWidth="-Infinity" prefHeight="500.0" prefWidth="800.0" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.poshaisan.LoginController">
+    <center>
+        <BorderPane prefHeight="200.0" prefWidth="200.0" BorderPane.alignment="CENTER">
+            <center>
+                <VBox alignment="CENTER" prefHeight="400.0" prefWidth="452.0" styleClass="bg-right-pane" stylesheets="@css/login.css" BorderPane.alignment="CENTER">
+                    <Label text="Sistema POS" textFill="#fffefe">
+                        <font>
+                            <Font name="System Bold" size="32.0" />
+                        </font>
+                    </Label>
+                    <Label fx:id="restaurantName" alignment="CENTER" prefHeight="47.0" textAlignment="CENTER" textFill="WHITE">
+                        <font>
+                            <Font name="System Bold" size="32.0" />
+                        </font>
+                    </Label>
+                    <TextField fx:id="username" alignment="CENTER" onAction="#login" prefHeight="48.0" prefWidth="290.0" promptText="Usuario" styleClass="login-input" />
+                    <PasswordField fx:id="password" alignment="CENTER" onAction="#login" prefHeight="48.0" prefWidth="266.0" promptText="Contraseña" styleClass="login-input" />
+                    <HBox alignment="CENTER_RIGHT" prefHeight="48.0" prefWidth="266.0">
+                        <Button fx:id="loginBtn" alignment="CENTER" mnemonicParsing="false" onAction="#login" prefHeight="48.0" prefWidth="206.0" styleClass="login-btn" text="Iniciar sesión" HBox.hgrow="ALWAYS" />
+                    </HBox>
+                </VBox>
+            </center>
+        </BorderPane>
+    </center>
+    <left>
+        <AnchorPane prefHeight="400.0" prefWidth="350.0" styleClass="image" stylesheets="@css/login.css" BorderPane.alignment="CENTER" />
+    </left>
+</BorderPane>

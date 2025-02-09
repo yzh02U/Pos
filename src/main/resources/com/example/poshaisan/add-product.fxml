@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<VBox xmlns:fx="http://javafx.com/fxml/1" fx:id="addProductSection" maxHeight="-Infinity" maxWidth="-Infinity"
+      minHeight="-Infinity"
+      minWidth="-Infinity" prefHeight="557.0" prefWidth="700.0" styleClass="vbox-container"
+      stylesheets="@css/add-product.css" xmlns="http://javafx.com/javafx/21"
+      fx:controller="com.example.poshaisan.AddProductController">
+    <Label styleClass="header-text" text="Agregar producto/加产品"/>
+    <VBox prefHeight="92.0" prefWidth="620.0">
+        <HBox alignment="CENTER_LEFT" prefHeight="41.0" prefWidth="620.0" styleClass="input-header-container">
+            <Label styleClass="input-label" text="Nombre del Producto/产品名字"/>
+            <Label fx:id="nameLabelWarning" styleClass="input-warning" text="* Obligatorio"/>
+        </HBox>
+        <TextField fx:id="nameInput" onKeyReleased="#handleLabelVisibility" prefHeight="48.0" prefWidth="620.0"
+                   promptText="Producto" styleClass="add-product-input"/>
+    </VBox>
+    <VBox layoutX="50.0" layoutY="50.0" prefHeight="82.0" prefWidth="620.0">
+        <HBox alignment="CENTER_LEFT" prefHeight="33.0" prefWidth="620.0" styleClass="input-header-container">
+            <Label styleClass="input-label" text="Precio del producto/价格"/>
+            <Label fx:id="priceLabelWarning" styleClass="input-warning" text="* Obligatorio"/>
+        </HBox>
+        <TextField fx:id="priceInput" onKeyReleased="#handleLabelVisibility" prefHeight="48.0" prefWidth="620.0"
+                   promptText="Precio" styleClass="add-product-input" />
+    </VBox>
+    <VBox layoutX="50.0" layoutY="234.0" prefHeight="76.0" prefWidth="620.0">
+        <HBox alignment="CENTER_LEFT" prefHeight="23.0" prefWidth="620.0" styleClass="input-header-container">
+            <Label styleClass="input-label" text="Tipo del producto/产品种"/>
+            <Label fx:id="typeLabelWarning" styleClass="input-warning" text="* Obligatorio"/>
+        </HBox>
+        <ComboBox fx:id="typeInput" onAction="#handleLabelVisibility" prefHeight="48.0" prefWidth="632.0"
+                  styleClass="comboBox-input"/>
+    </VBox>
+    <HBox prefHeight="54.0" prefWidth="620.0" styleClass="actions-container">
+        <Button fx:id="confirmBtn" mnemonicParsing="false" onAction="#addProduct" prefHeight="48.0"
+                prefWidth="100.0" styleClass="btn-confirm" text="Confirmar/确定"/>
+        <Button fx:id="cancelBtn" mnemonicParsing="false" onAction="#closeStage" prefHeight="48.0"
+                prefWidth="100.0" styleClass="btn-cancel" text="Cancelar/取消"/>
+    </HBox>
+</VBox>
