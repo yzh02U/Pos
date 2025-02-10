@@ -331,4 +331,35 @@ public class AddOrderDAO {
             logger.severe(e.toString());
         }
     }
+
+
+    public List<OrderItem> fetchOrderItems(int orderId) {
+        List<OrderItem> orderItems = new ArrayList<>();
+        String query = "SELECT products FROM orders WHERE id = ?"; // Cambio "items" por "products"
+
+        try (Connection connection = DriverManager.getConnection(URL, USER, PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            preparedStatement.setInt(1, orderId);
+            ResultSet resultSet = preparedStatement.executeQuery();
+
+            if (resultSet.next()) {
+                String jsonProducts = resultSet.getString("products");
+                if (jsonProducts != null && !jsonProducts.isEmpty()) {
+                    try {
+                        orderItems = utils.jsonToItems(jsonProducts); // Convertir JSON a lista de productos
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                        System.err.println("Error al convertir JSON a lista de productos: " + e.getMessage());
+                    }
+                }
+            }
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+        return orderItems;
+    }
+
+
+
 }

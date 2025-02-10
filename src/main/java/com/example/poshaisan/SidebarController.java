@@ -105,6 +105,10 @@ public class SidebarController {
         }
     }
 
+    public void loadHistory() {
+        loadPage("history", null, false);
+    }
+
     /**
      * Loads the dashboard page.
      */

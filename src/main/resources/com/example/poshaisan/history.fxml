@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+
+<HBox xmlns="http://javafx.com/javafx/8.0" xmlns:fx="http://javafx.com/fxml/1"
+      fx:controller="com.example.poshaisan.HistoryController"
+      spacing="25" alignment="CENTER"
+      style="-fx-background-color: #000000; -fx-padding: 20px;">
+
+    <!-- Tabla de Pedidos (Izquierda) -->
+    <VBox spacing="10">
+        <Label text="订单记录"
+               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: red;"/>
+        <TableView fx:id="historyTable" prefWidth="650" prefHeight="700">
+            <columns>
+                <TableColumn fx:id="orderIdColumn" text="ID" prefWidth="100" style="-fx-font-size: 18px;"/>
+                <TableColumn fx:id="orderisTableColumn" text="类型" prefWidth="100" style="-fx-font-size: 18px;"/>
+                <TableColumn fx:id="orderServerColumn" text="服务员" prefWidth="150" style="-fx-font-size: 18px;"/>
+                <TableColumn fx:id="orderDateColumn" text="日" prefWidth="200" style="-fx-font-size: 18px;"/>
+                <TableColumn fx:id="orderTotalColumn" text="一共" prefWidth="100" style="-fx-font-size: 18px;"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <!-- Tabla de Productos del Pedido Seleccionado (Centro) -->
+    <VBox spacing="10">
+        <Label text="订单详情"
+               style="-fx-font-size: 24px; -fx-font-weight: bold; -fx-text-fill: red;"/>
+        <TableView fx:id="orderDetailsTable" prefWidth="400" prefHeight="700">
+            <columns>
+                <TableColumn fx:id="productNameColumn" text="产品" prefWidth="200" style="-fx-font-size: 18px;"/>
+                <TableColumn fx:id="productQuantityColumn" text="数量" prefWidth="100" style="-fx-font-size: 18px;"/>
+                <TableColumn fx:id="productTotalColumn" text="价钱" prefWidth="100" style="-fx-font-size: 18px;"/>
+            </columns>
+        </TableView>
+    </VBox>
+
+    <!-- Botón de Imprimir (Derecha) -->
+    <VBox spacing="10" alignment="CENTER">
+        <Button fx:id="printButton" text="打印"
+                style="-fx-font-size: 18px; -fx-padding: 10px 20px;
+                       -fx-background-color: #28a745; -fx-text-fill: white;
+                       -fx-font-weight: bold; -fx-border-radius: 5px;
+                       -fx-cursor: hand;"/>
+    </VBox>
+
+</HBox>

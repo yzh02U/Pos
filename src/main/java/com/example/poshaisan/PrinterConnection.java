@@ -193,6 +193,55 @@ public class PrinterConnection {
         }
     }
 
+
+    public void printDetail(TableOrder order,
+                           boolean isTable, boolean isCopy) throws PrinterException {
+        PrinterMatrix printer = new PrinterMatrix();
+        FileInputStream inputStream = null;
+        int voucherSize = (isTable) ?
+                order.getItems().size() + 35 : order.getItems().size() + 31;
+
+        printer.setOutSize(voucherSize, 48);
+
+        printHeader(printer);
+        formatDate(printer);
+        formatTime(printer);
+        printOrderDetails(printer, order);
+        int counter = formatOrderItems(order.getItems(), printer);
+        formatSummary(order, isTable, printer, counter);
+
+        printer.toFile("impresion.txt");
+
+        try {
+            inputStream = new FileInputStream("impresion.txt");
+        } catch (FileNotFoundException e) {
+            logger.severe("File not found: " + e.getMessage());
+            throw new PrinterException("File not found");
+        }
+
+        DocFlavor docFormat = DocFlavor.INPUT_STREAM.AUTOSENSE;
+        Doc document = new SimpleDoc(inputStream, docFormat, null);
+        PrintRequestAttributeSet attributeSet =
+                new HashPrintRequestAttributeSet();
+        PrintService printService =
+                PrintServiceLookup.lookupDefaultPrintService();
+
+        if (printService == null) {
+            logger.severe("No printer found");
+            throw new PrinterException("No printer found");
+        }
+
+        DocPrintJob printJob = printService.createPrintJob();
+
+        try {
+            printJob.print(document, attributeSet);
+
+        } catch (PrintException e) {
+            logger.severe("Printing failed: " + e.getMessage());
+            throw new PrinterException("Printing failed");
+        }
+    }
+
     public void Add_to_BD(TableOrder order, Boolean isTable){
 
         orderDAO.addOrderToDatabase(order, isTable, utils.getDateTime());

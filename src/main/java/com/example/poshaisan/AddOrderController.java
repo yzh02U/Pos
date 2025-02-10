@@ -50,6 +50,7 @@ public class AddOrderController {
 
     ObservableList<OrderItem> itemsList = FXCollections.observableArrayList();
 
+
     @FXML
     Button clearBtn;
     @FXML
@@ -1121,4 +1122,7 @@ public class AddOrderController {
         label.getStyleClass().add("dish-center-label");
         return label;
     }
+
+
+
 }

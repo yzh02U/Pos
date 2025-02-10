@@ -21,6 +21,7 @@
                </children>
                 </VBox>
                 <Button fx:id="dashboardBtn" mnemonicParsing="false" onAction="#loadDashboard" prefHeight="76.0" prefWidth="204.0" style="-fx-border-width: 1px 0 1px 0;" styleClass="sidebar-button" text="Dashboard/仪表板" textFill="#ffd2d2" />
+                <Button fx:id="historyBtn" mnemonicParsing="false" onAction="#loadHistory" prefHeight="76.0" prefWidth="204.0" styleClass="sidebar-button" text="Historial/记录" textFill="#ffd2d2" />
                 <Button fx:id="inventoryBtn" mnemonicParsing="false" onAction="#loadInventory" prefHeight="76.0" prefWidth="204.0" styleClass="sidebar-button" text="Inventario/库存" textFill="#ffd2d2" />
                 <Button fx:id="salesBtn" mnemonicParsing="false" onAction="#loadSales" prefHeight="76.0" prefWidth="204.0" styleClass="sidebar-button" text="Ventas/销售" textFill="#ffd2d2" />
                 <Button fx:id="logoutBtn" mnemonicParsing="false" onAction="#logout" prefHeight="76.0" prefWidth="204.0" styleClass="sidebar-button" text="Cerrar sesión/关闭" textFill="#ffd2d2" />
