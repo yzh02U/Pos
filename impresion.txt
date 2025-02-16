@@ -4,7 +4,7 @@
  VEINTIUNO DE MAYO, 977, Talagante              
  (2) 28145093                                   
                                                 
- FECHA  : 16/02/202      Hora : 01:07           
+ FECHA  : 16/02/202      Hora : 16:02           
  MESA   :  -                                    
  CAJERO :  -                                    
                                                 
@@ -13,16 +13,16 @@
  PRODUCTO                              PRECIO   
  --------                              ------   
  2x WANTAN                             $6.400   
- 1x ARROZESP1PCONM X ARROZESP1PCONM    $0       
+ 2x PRIMAVERA                          $6.600   
                                                 
-                           SUBTOTAL    $6.400   
+                           SUBTOTAL    $13.000  
                            DESCUENTO   $0       
           --------------------------------------
-                         TOTAL A PAGAR $6.400   
+                         TOTAL A PAGAR $13.000  
           --------------------------------------
-                  10% PROPINA SUGERIDA $640     
+                  10% PROPINA SUGERIDA $1.300   
           --------------------------------------
-  TOTAL A PAGAR + 10% PROPINA SUGERIDA $7.040   
+  TOTAL A PAGAR + 10% PROPINA SUGERIDA $14.300  
                                                 
              NO VALIDO COMO BOLETA              
                                                 

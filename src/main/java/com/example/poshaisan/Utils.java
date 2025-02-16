@@ -57,7 +57,7 @@ public class Utils {
 
     public final String DB_URL = "jdbc:mysql://localhost:3306/pos";
     public final String DB_USER = "root";
-    public final String DB_PASSWORD = "3812";
+    public final String DB_PASSWORD = "328888";
 
     public final String RESTAURANT_NAME = "CHINA HOUSE";
     public final String RESTAURANT_ADDRESS = "VEINTIUNO DE MAYO, 977, Talagante";

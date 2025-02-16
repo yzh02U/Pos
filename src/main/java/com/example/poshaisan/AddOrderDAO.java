@@ -195,7 +195,21 @@ public class AddOrderDAO {
         }
     }
 
+    public void deleteAllOrdersFromDatabase() {
+        String query = "TRUNCATE TABLE orders;";
 
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            // Ejecutar la operación de eliminación
+            preparedStatement.executeUpdate();
+            logger.info("SE HAN ELIMINADO TODAS LAS ORDENES DE ORDERS");
+
+        } catch (SQLException e) {
+            logger.severe("ERROR AL ELIMINAR DATOS DE LA TABLA ORDERS");
+            logger.severe(e.toString());
+        }
+    }
     /**
      * Fetches all orders from the database.
      *

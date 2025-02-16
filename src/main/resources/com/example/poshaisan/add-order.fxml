@@ -17,7 +17,7 @@
 
 <?import javafx.scene.text.Text?>
 <VBox fx:id="addOrderSection" alignment="CENTER" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="795.0" prefHeight="768.0" prefWidth="1179.0" styleClass="vbox-container" stylesheets="@css/add-order.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.poshaisan.AddOrderController">
-    <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefHeight="654.0" prefWidth="729.0" VBox.vgrow="ALWAYS">
+    <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" prefHeight="850.0" prefWidth="729.0" VBox.vgrow="ALWAYS">
         <left>
             <VBox fillWidth="false" prefHeight="654.0" prefWidth="372.0" BorderPane.alignment="CENTER" VBox.vgrow="ALWAYS">
                 <TableView fx:id="productTable" editable="true" maxHeight="1.7976931348623157E308" minHeight="50.0" prefHeight="356.0" prefWidth="358.0" VBox.vgrow="NEVER">
@@ -102,7 +102,7 @@
             </VBox>
         </left>
         <center>
-            <VBox prefHeight="654.0" prefWidth="815.0" spacing="20.0" BorderPane.alignment="CENTER">
+            <VBox prefHeight="1200.0" prefWidth="815.0" spacing="20.0" BorderPane.alignment="CENTER">
                 <padding>
                     <Insets left="30.0" right="30.0" />
                 </padding>
@@ -153,23 +153,43 @@
                         </HBox.margin>
                     </TextField>
 
-                    <Button fx:id="AddChange" onAction="#DoChange" layoutX="14.0" layoutY="-4.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="77.0" text="Agregar/加入">
+                    <Button fx:id="AddChange" onAction="#DoChange" layoutX="14.0" layoutY="-4.0" style="-fx-background-color: rgb(134, 231, 255);" mnemonicParsing="false" prefHeight="38.0" prefWidth="77.0" text="Agregar/加入">
                         <styleClass>
                             <String fx:value="btn" />
-                            <String fx:value="orange-background" />
                         </styleClass>
                     </Button>
                 </HBox>
 
-                <VBox prefHeight="600.0" prefWidth="100.0" styleClass="center-vbox-container" VBox.vgrow="ALWAYS">
-                    <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" prefHeight="424.0" prefWidth="802.0">
+
+                <HBox spacing="10"> <!-- Espacio general entre elementos -->
+                    <TextField fx:id="Comment" maxWidth="300" minWidth="118.0" prefHeight="51.0" prefWidth="300.0"
+                               styleClass="table-input" promptText="输入评论或更改">
+                        <HBox.margin>
+                            <Insets left="42"/> <!-- Margen a la izquierda -->
+                        </HBox.margin>
+                    </TextField>
+                    <TextField fx:id="Comment_Price" maxWidth="300" minWidth="118.0" prefHeight="51.0" prefWidth="300.0" text="0"
+                               styleClass="table-input" promptText="输入价格">
+                        <HBox.margin>
+                            <Insets left="20"/> <!-- Margen a la izquierda -->
+                        </HBox.margin>
+                    </TextField>
+                    <Button fx:id="Add_Comment" onAction="#AddComment" style="-fx-background-color: rgb(134, 231, 255);" layoutX="14.0" layoutY="-4.0" mnemonicParsing="false" prefHeight="38.0" prefWidth="77.0" text="Agregar/加入">
+                        <styleClass>
+                            <String fx:value="btn" />
+                        </styleClass>
+                    </Button>
+                </HBox>
+
+                <VBox prefHeight="1000.0" prefWidth="100.0" styleClass="center-vbox-container">
+                    <ScrollPane fitToWidth="true" maxHeight="1.7976931348623157E308" prefHeight="1000.0" prefWidth="802.0">
                         <padding>
-                            <Insets bottom="20.0" left="20.0" right="20.0" top="20.0" />
+                            <Insets bottom="20.0" left="20.0" right="20.0" top="0.0" />
                         </padding>
                         <FlowPane fx:id="flowpaneContainer" maxHeight="1.7976931348623157E308" prefHeight="397.0" prefWidth="613.0" />
                     </ScrollPane>
                     <AnchorPane minHeight="50.0" prefHeight="50.0" prefWidth="666.0" VBox.vgrow="NEVER">
-                        <Button fx:id="menuBtn" layoutX="14.0" layoutY="-4.0" mnemonicParsing="false" onAction="#goBackMenu" prefHeight="38.0" prefWidth="77.0" text="Volver a menú">
+                        <Button fx:id="menuBtn" layoutX="14.0" layoutY="-130.0" mnemonicParsing="false" onAction="#goBackMenu" prefHeight="38.0" prefWidth="77.0" text="Volver a menú">
                             <styleClass>
                                 <String fx:value="btn" />
                                 <String fx:value="orange-background" />
@@ -188,7 +208,7 @@
 
         </bottom>
         <VBox.margin>
-            <Insets top="40.0" />
+            <Insets top="60.0" />
         </VBox.margin>
     </BorderPane>
 </VBox>

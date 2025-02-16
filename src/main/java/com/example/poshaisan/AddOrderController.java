@@ -97,6 +97,12 @@ public class AddOrderController {
     TextField Cambio_two;
     @FXML
     Button AddChange;
+    @FXML
+    TextField Comment;
+    @FXML
+    Button Add_Comment;
+    @FXML
+    TextField Comment_Price;
 
 
     TableOrder currentOrder = null;
@@ -837,6 +843,35 @@ public class AddOrderController {
         });
     }
 
+    public void AddComment(){
+
+        String Comentario = Comment.getText();
+        try{
+            Integer Price = Integer.parseInt(Comment_Price.getText());
+            String Change = "";
+
+            for (Integer i = 0; i < Comentario.length() && i < 28; i++) {
+
+                Change += Comentario.charAt(i);
+            }
+
+            Integer id_comment = createItemId();
+            if(Price >= 0 && !Comentario.isEmpty()) {
+                currentOrder.addItem(Change, 1, Price, id_comment, 1);
+                Comment_Price.setText("0");
+                Comment.setText("");
+                updateItemsList();
+            }
+        }
+        catch (NumberFormatException e){
+            Comment_Price.setText("0");
+            Comment.setText("");
+        }
+        System.out.println("SE ANADE EL COMENTARIO");
+    }
+
+
+
     public void DoChange(){
 
         String Change_one = Cambio_one.getText();
@@ -883,11 +918,6 @@ public class AddOrderController {
 
         }
         System.out.println("ESTA Haciendose el cambio");
-
-
-
-
-
     }
 
     /**

@@ -38,11 +38,21 @@
 
     <!-- Botón de Imprimir (Derecha) -->
     <VBox spacing="10" alignment="CENTER">
-        <Button fx:id="printButton" text="打印"
+        <HBox>
+                <Button fx:id="printButton" text="打印" prefWidth="150"
                 style="-fx-font-size: 18px; -fx-padding: 10px 20px;
-                       -fx-background-color: #28a745; -fx-text-fill: white;
+                       -fx-background-color: #9fe078; -fx-text-fill: white;
                        -fx-font-weight: bold; -fx-border-radius: 5px;
                        -fx-cursor: hand;"/>
+        </HBox>
+
+        <HBox>
+                <Button fx:id="CloseDay" text="结束一天" onAction="#showConfirmationDialog" prefWidth="150"
+                style="-fx-font-size: 18px; -fx-padding: 10px 20px;
+                       -fx-background-color: #e07878; -fx-text-fill: white;
+                       -fx-font-weight: bold; -fx-border-radius: 5px;
+                       -fx-cursor: hand;"/>
+        </HBox>
     </VBox>
 
 </HBox>
