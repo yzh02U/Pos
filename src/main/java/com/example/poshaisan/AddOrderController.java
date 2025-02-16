@@ -91,6 +91,12 @@ public class AddOrderController {
     Label OrderLabel;
     @FXML
     Button copyBtn;
+    @FXML
+    TextField Cambio_one;
+    @FXML
+    TextField Cambio_two;
+    @FXML
+    Button AddChange;
 
 
     TableOrder currentOrder = null;
@@ -146,6 +152,8 @@ public class AddOrderController {
                 initializeQuantityInput();
                 initializeServerInput();
                 initializeProductInput();
+                initializeSearchProductInput(Cambio_one);
+                initializeSearchProductInput(Cambio_two);
                 initializeTableInput(isTable);
                 initializeDiscountInput();
                 initTable();
@@ -829,6 +837,59 @@ public class AddOrderController {
         });
     }
 
+    public void DoChange(){
+
+        String Change_one = Cambio_one.getText();
+        String Change_two = Cambio_two.getText();
+
+        Integer productPrice_one = getItemPrice(Change_one);
+        Integer productPrice_two = getItemPrice(Change_two);
+
+        if(!Change_one.isEmpty() && !Change_two.isEmpty()){
+
+            Integer newPrice = productPrice_two - productPrice_one;
+
+
+            String Change = "";
+
+            for (Integer i = 0; i < Change_one.length() && i < 14; i++) {
+
+                Change += Change_one.charAt(i);
+            }
+
+            Change += " X ";
+
+            for (Integer i = 0; i < Change_two.length() && i < 14; i++) {
+
+                Change += Change_two.charAt(i);
+            }
+
+            Integer id_product = createItemId();
+            System.out.println("El cambio " + Change);
+            System.out.println("id del producto " + id_product);
+            System.out.println("La diferencia " + newPrice);
+
+            if (newPrice <= 0) {
+                currentOrder.addItem(Change,1,0, id_product, 1);
+
+            } else {
+
+                currentOrder.addItem(Change, 1, newPrice, id_product, 1);
+            }
+
+            updateItemsList();
+            Cambio_one.setText("");
+            Cambio_two.setText("");
+
+        }
+        System.out.println("ESTA Haciendose el cambio");
+
+
+
+
+
+    }
+
     /**
      * Listens for changes in the Quantity field and restricts input to
      * numeric values only.
@@ -878,6 +939,8 @@ public class AddOrderController {
                         quantityInput.clear();
                         productInput.requestFocus();
                     }
+
+                    quantityInput.setText("1");
                 }
             }
         });
@@ -1027,6 +1090,30 @@ public class AddOrderController {
         autoCompletionBinding.setOnAutoCompleted(
                 event -> quantityInput.requestFocus());
     }
+
+    private void initializeSearchProductInput(TextField textfield) {
+        List<String> products =
+                new java.util.ArrayList<>(items.stream()
+                        .map(InventoryItem::getItemName)
+                        .toList());
+        products.add("PRODUCTO FUERA DE MENÚ");
+        AutoCompletionBinding<String> autoCompletionBinding =
+                TextFields.bindAutoCompletion(textfield, products);
+        autoCompletionBinding.setDelay(50);
+
+
+        textfield.focusedProperty().addListener((observable, oldValue,
+                                                    newValue) -> {
+            if (!newValue) {
+                handleFocusLost(textfield, products);
+            }
+        });
+
+        autoCompletionBinding.setOnAutoCompleted(
+                event -> quantityInput.requestFocus());
+    }
+
+
 
     /**
      * Handles Enter key press in the product input field to clear if the
