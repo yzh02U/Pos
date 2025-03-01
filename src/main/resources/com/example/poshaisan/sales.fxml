@@ -13,12 +13,12 @@
 
 <?import javafx.scene.layout.Pane?>
 <?import javafx.scene.layout.AnchorPane?>
-<VBox fx:id="salesSection" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="600.0" prefWidth="800.0" styleClass="vbox-container" stylesheets="@css/sales.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.poshaisan.SalesController">
+<VBox fx:id="salesSection" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" minHeight="-Infinity" minWidth="-Infinity" prefHeight="1000.0" prefWidth="1000.0" styleClass="vbox-container" stylesheets="@css/sales.css" xmlns="http://javafx.com/javafx/21" xmlns:fx="http://javafx.com/fxml/1" fx:controller="com.example.poshaisan.SalesController">
     <VBox prefHeight="80.0" prefWidth="520.0" spacing="8.0">
         <Label fx:id="headerTitle" styleClass="header-text" text="Sección de Ventas" />
         <Label styleClass="header-description" text="Aquí podrás registrar las ventas para llevar y las de consumo en el local" />
     </VBox>
-    <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="200.0" styleClass="sale-pane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
+    <TabPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="1000.0" prefWidth="1000.0" styleClass="sale-pane" tabClosingPolicy="UNAVAILABLE" VBox.vgrow="ALWAYS">
         <Tab fx:id="tablesTab" closable="false" text="Mesas">
             <VBox maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="200.0" prefWidth="100.0">
                 <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="354.0" prefViewportHeight="800.0" prefWidth="720.0" VBox.vgrow="ALWAYS">
@@ -89,5 +89,32 @@
             </children>
             </VBox>
         </Tab>
+
+
+        <Tab fx:id="Mesita" closable="false" text="Salon Principal">
+            <VBox prefHeight="1000.0" prefWidth="1000.0">
+                <children>
+                    <ScrollPane fitToHeight="true" fitToWidth="true" maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="10000.0" prefViewportHeight="800.0" prefWidth="10000.0">
+                        <content>
+                            <BorderPane maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefWidth="705.0" styleClass="border-pane">
+                                <center>
+                                    <Pane fx:id="MesasaOrg"  maxHeight="1.7976931348623157E308" maxWidth="1.7976931348623157E308" prefHeight="1000.0" prefWidth="1000.0"  BorderPane.alignment="CENTER">
+                                        <BorderPane.margin>
+                                            <Insets />
+                                        </BorderPane.margin>
+                                        <padding>
+                                            <Insets bottom="30.0" left="30.0" right="30.0" top="30.0" />
+                                        </padding>
+                                    </Pane>
+
+
+                                </center>
+                            </BorderPane>
+                        </content>
+                    </ScrollPane>
+                </children>
+            </VBox>
+        </Tab>
+
     </TabPane>
 </VBox>

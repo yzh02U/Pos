@@ -103,6 +103,14 @@
     -fx-cursor: hand;
 }
 
+.circle-container{
+    -fx-background-color: white;
+}
+
+.circle-container:hover{
+    -fx-cursor: hand;
+}
+
 .table-name-label{
     -fx-max-width: Infinity;
     -fx-alignment: center;

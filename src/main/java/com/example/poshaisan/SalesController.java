@@ -13,6 +13,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.FlowPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
+import javafx.scene.shape.Circle;
 
 import java.util.*;
 
@@ -29,6 +30,7 @@ public class SalesController {
     public Button addTableBtn;
     public Button addOrderBtn;
     public Tab ordersTab;
+    public Pane MesasaOrg;
     private static final SidebarController sidebar =
             SidebarController.getInstance();
     private static final Utils utils = new Utils();
@@ -91,6 +93,8 @@ public class SalesController {
         takeouts.forEach(order -> takeoutsFlowPane.getChildren()
                 .add(createTakeoutUI(order)));
 
+
+        initializeMainLobby();
 /*
         TableUI.setPrefSize(600, 400);
 
@@ -198,6 +202,19 @@ public class SalesController {
         return vbox;
     }
 
+    private Pane createCircleUI(){
+        Pane circularPane = new Pane();
+        circularPane.setPrefSize(200, 200); // Contenedor cuadrado
+        // Asigna un fondo para poder visualizar el área recortada
+        circularPane.getStyleClass().add("circle-container");
+        //circularPane.setStyle("-fx-background-color: lightblue;");
+        Circle clipCircle = new Circle(0, 0, 50); // Centro en (100,100) y radio 100
+        circularPane.setClip(clipCircle);
+
+        return circularPane;
+
+    }
+
     /**
      * Creates a Label UI component for displaying the table name.
      *
@@ -250,6 +267,48 @@ public class SalesController {
                 event -> sidebar.loadPage("add-order", order, false));
         return vbox;
     }
+
+    private VBox createTableUIFixedPos(TableOrder order, float x, float y, boolean isSquare, String name ){
+
+        VBox vbox = createVBoxUI();
+        vbox.setLayoutX(x);
+        vbox.setLayoutY(y);
+        vbox.getChildren().addAll(createTableLabelUI(order), createTableServerUI(order));
+        vbox.setOnMouseClicked(
+                event -> sidebar.loadPage("add-order", order, false));
+        return vbox;
+    }
+
+    private Pane createCircularTableUIFixedPos(TableOrder order, float x, float y, boolean isSquare, String name ){
+
+        Pane circle = createCircleUI();
+        circle.setLayoutX(x);
+        circle.setLayoutY(y);
+        circle.getChildren().addAll(createTableLabelUI(order), createTableServerUI(order));
+        circle.setOnMouseClicked(
+                event -> sidebar.loadPage("add-order", order, false));
+        return circle;
+    }
+
+    private void initializeMainLobby(){
+
+        TableOrder orden = takeouts.getFirst();
+       // VBox vbox = createTableUIFixedPos(orden,0,0, true, "25");
+       // VBox vbox2 = createTableUIFixedPos(orden,130,90, true, "25");
+      //  VBox vbox90 = createTableUIFixedPos(orden,0,480, true, "25");
+        Pane circulo = createCircularTableUIFixedPos(orden,200,200, true, "25");
+      //  MesasaOrg.getChildren().add(vbox);
+     //   MesasaOrg.getChildren().add(vbox2);
+     //   MesasaOrg.getChildren().add(vbox90);
+        MesasaOrg.getChildren().add(circulo);
+
+
+    }
+
+
+
+
+
 
 
 
