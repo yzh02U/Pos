@@ -201,6 +201,15 @@ public class AddOrderController {
                 });
             }
         });
+
+        if(!isTable){
+
+            tableInput.setEditable(true);
+        }
+        else {
+            tableInput.setEditable(false);
+        }
+
     }
 
     /**

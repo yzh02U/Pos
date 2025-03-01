@@ -31,6 +31,7 @@ public class SalesController {
     public Button addOrderBtn;
     public Tab ordersTab;
     public Pane MesasaOrg;
+    public Pane Terraza;
     private static final SidebarController sidebar =
             SidebarController.getInstance();
     private static final Utils utils = new Utils();
@@ -95,6 +96,7 @@ public class SalesController {
 
 
         initializeMainLobby();
+        initializeTerrace();
 /*
         TableUI.setPrefSize(600, 400);
 
@@ -193,10 +195,10 @@ public class SalesController {
      *
      * @return A styled VBox for displaying table information.
      */
-    private VBox createVBoxUI() {
+    private VBox createVBoxUI(int x, int y) {
         VBox vbox = new VBox();
 
-        vbox.setPrefSize(100, 100);
+        vbox.setPrefSize(x, y);
         vbox.getStyleClass().add("table-container");
         vbox.setPadding(new Insets(20, 10, 20, 10));
         return vbox;
@@ -204,11 +206,10 @@ public class SalesController {
 
     private Pane createCircleUI(){
         Pane circularPane = new Pane();
-        circularPane.setPrefSize(200, 200); // Contenedor cuadrado
+        circularPane.setPrefSize(100, 100); // Contenedor cuadrado
         // Asigna un fondo para poder visualizar el área recortada
         circularPane.getStyleClass().add("circle-container");
-        //circularPane.setStyle("-fx-background-color: lightblue;");
-        Circle clipCircle = new Circle(0, 0, 50); // Centro en (100,100) y radio 100
+        Circle clipCircle = new Circle(50, 50, 50); // Centro en (100,100) y radio 100
         circularPane.setClip(clipCircle);
 
         return circularPane;
@@ -228,6 +229,16 @@ public class SalesController {
         return tableName;
     }
 
+
+    private Label createTableLabelCircularUI(TableOrder order) {
+        Label tableName = new Label(order.getTableName());
+        tableName.setLayoutX(40); // Posición X
+        tableName.setLayoutY(40);  // Posición Y
+
+        tableName.getStyleClass().add("table-name-circular-label");
+        return tableName;
+    }
+
     /**
      * Creates a Label UI component for displaying the server assigned to the
      * table.
@@ -242,6 +253,15 @@ public class SalesController {
         return server;
     }
 
+    private Label createTableServerCircularUI(TableOrder order) {
+        Label server = new Label(order.getServer());
+        server.setLayoutX(25); // Posición X
+        server.setLayoutY(10);  // Posición Y
+
+        server.getStyleClass().add("table-server-circular-label");
+        return server;
+    }
+
     /**
      * Creates a VBox UI for displaying a TableOrder.
      *
@@ -249,17 +269,17 @@ public class SalesController {
      * @return A VBox containing UI elements for the TableOrder.
      */
     private VBox createTableUI(TableOrder order) {
-        VBox vbox = createVBoxUI();
+        VBox vbox = createVBoxUI(100, 100);
 
         vbox.getChildren()
-            .addAll(createTableLabelUI(order), createTableServerUI(order));
+            .addAll(createTableLabelUI(order), createTableServerCircularUI(order));
         vbox.setOnMouseClicked(
                 event -> sidebar.loadPage("add-order", order, true));
         return vbox;
     }
 
     private VBox createTakeoutUI(TableOrder order) {
-        VBox vbox = createVBoxUI();
+        VBox vbox = createVBoxUI(100, 100);
 
         vbox.getChildren()
             .addAll(createTableLabelUI(order), createTableServerUI(order));
@@ -268,39 +288,209 @@ public class SalesController {
         return vbox;
     }
 
-    private VBox createTableUIFixedPos(TableOrder order, float x, float y, boolean isSquare, String name ){
+    private VBox createTableUIFixedPos( float x, float y, String name ){
 
-        VBox vbox = createVBoxUI();
+        VBox vbox = createVBoxUI(100, 100);
         vbox.setLayoutX(x);
         vbox.setLayoutY(y);
-        vbox.getChildren().addAll(createTableLabelUI(order), createTableServerUI(order));
+        /*vbox.getChildren().addAll(createTableLabelUI(order), createTableServerUI(order));
         vbox.setOnMouseClicked(
                 event -> sidebar.loadPage("add-order", order, false));
+                */
+
+
+        for (TableOrder table : tables) {
+            if (table.getTableName().equals(name)) {
+                final TableOrder finalOrder = table; // Variable final dentro del if
+                vbox.setOnMouseClicked(
+                        event -> sidebar.loadPage("add-order", finalOrder, true));
+                vbox.getChildren().addAll(createTableLabelCircularUI(finalOrder), createTableServerCircularUI(finalOrder));
+                vbox.setStyle("-fx-background-color:  #ff4d4d;");
+
+
+                return vbox;
+            }
+        }
+
+        TableOrder newOrder = createTableOrder();
+        newOrder.setTableName(name);
+        tables.add(newOrder); // Add the new order to the tables list
+
+        vbox.getChildren().addAll(createTableLabelCircularUI(newOrder), createTableServerCircularUI(newOrder));
+        vbox.setOnMouseClicked(
+                event -> sidebar.loadPage("add-order", newOrder, true));
+        vbox.setStyle("-fx-background-color: #66ff99;");
         return vbox;
     }
 
-    private Pane createCircularTableUIFixedPos(TableOrder order, float x, float y, boolean isSquare, String name ){
+
+    private VBox createHTableUIFixedPos( float x, float y, String name ){
+
+        VBox vbox = createVBoxUI(200, 100);
+        vbox.setLayoutX(x);
+        vbox.setLayoutY(y);
+        /*vbox.getChildren().addAll(createTableLabelUI(order), createTableServerUI(order));
+        vbox.setOnMouseClicked(
+                event -> sidebar.loadPage("add-order", order, false));
+                */
+
+
+        for (TableOrder table : tables) {
+            if (table.getTableName().equals(name)) {
+                final TableOrder finalOrder = table; // Variable final dentro del if
+                vbox.setOnMouseClicked(
+                        event -> sidebar.loadPage("add-order", finalOrder, true));
+                vbox.getChildren().addAll(createTableLabelCircularUI(finalOrder), createTableServerCircularUI(finalOrder));
+                vbox.setStyle("-fx-background-color:  #ff4d4d;");
+
+
+                return vbox;
+            }
+        }
+
+        TableOrder newOrder = createTableOrder();
+        newOrder.setTableName(name);
+        tables.add(newOrder); // Add the new order to the tables list
+
+        vbox.getChildren().addAll(createTableLabelCircularUI(newOrder), createTableServerCircularUI(newOrder));
+        vbox.setOnMouseClicked(
+                event -> sidebar.loadPage("add-order", newOrder, true));
+        vbox.setStyle("-fx-background-color: #66ff99;");
+        return vbox;
+    }
+
+
+    private VBox createVTableUIFixedPos( float x, float y, String name ){
+
+        VBox vbox = createVBoxUI(100, 175);
+        vbox.setLayoutX(x);
+        vbox.setLayoutY(y);
+        /*vbox.getChildren().addAll(createTableLabelUI(order), createTableServerUI(order));
+        vbox.setOnMouseClicked(
+                event -> sidebar.loadPage("add-order", order, false));
+                */
+
+
+        for (TableOrder table : tables) {
+            if (table.getTableName().equals(name)) {
+                final TableOrder finalOrder = table; // Variable final dentro del if
+                vbox.setOnMouseClicked(
+                        event -> sidebar.loadPage("add-order", finalOrder, true));
+                vbox.getChildren().addAll(createTableLabelCircularUI(finalOrder), createTableServerCircularUI(finalOrder));
+                vbox.setStyle("-fx-background-color:  #ff4d4d;");
+
+
+                return vbox;
+            }
+        }
+
+        TableOrder newOrder = createTableOrder();
+        newOrder.setTableName(name);
+        tables.add(newOrder); // Add the new order to the tables list
+
+        vbox.getChildren().addAll(createTableLabelCircularUI(newOrder), createTableServerCircularUI(newOrder));
+        vbox.setOnMouseClicked(
+                event -> sidebar.loadPage("add-order", newOrder, true));
+        vbox.setStyle("-fx-background-color: #66ff99;");
+        return vbox;
+    }
+
+    private Pane createCircularTableUIFixedPos( float x, float y, String name ){
 
         Pane circle = createCircleUI();
         circle.setLayoutX(x);
         circle.setLayoutY(y);
-        circle.getChildren().addAll(createTableLabelUI(order), createTableServerUI(order));
+
+
+        for (TableOrder table : tables) {
+            if (table.getTableName().equals(name)) {
+                final TableOrder finalOrder = table; // Variable final dentro del if
+                circle.setOnMouseClicked(
+                        event -> sidebar.loadPage("add-order", finalOrder, true));
+                circle.getChildren().addAll(createTableLabelCircularUI(finalOrder), createTableServerCircularUI(finalOrder));
+                circle.setStyle("-fx-background-color:  #ff4d4d;");
+                return circle;
+            }
+        }
+
+        TableOrder newOrder = createTableOrder();
+        newOrder.setTableName(name);
+        tables.add(newOrder); // Add the new order to the tables list
+
+        circle.getChildren().addAll(createTableLabelCircularUI(newOrder), createTableServerCircularUI(newOrder));
         circle.setOnMouseClicked(
-                event -> sidebar.loadPage("add-order", order, false));
+                event -> sidebar.loadPage("add-order", newOrder, true));
+        circle.setStyle("-fx-background-color: #66ff99;");
+
         return circle;
     }
 
     private void initializeMainLobby(){
 
-        TableOrder orden = takeouts.getFirst();
-       // VBox vbox = createTableUIFixedPos(orden,0,0, true, "25");
-       // VBox vbox2 = createTableUIFixedPos(orden,130,90, true, "25");
-      //  VBox vbox90 = createTableUIFixedPos(orden,0,480, true, "25");
-        Pane circulo = createCircularTableUIFixedPos(orden,200,200, true, "25");
-      //  MesasaOrg.getChildren().add(vbox);
-     //   MesasaOrg.getChildren().add(vbox2);
-     //   MesasaOrg.getChildren().add(vbox90);
+        VBox vbox = createTableUIFixedPos(260,470, "9");
+        VBox vbox1 = createTableUIFixedPos(260,350,  "10");
+        VBox vbox2 = createTableUIFixedPos(260,230,  "15");
+        VBox vbox3 = createTableUIFixedPos(260,110, "20");
+        VBox vbox4 = createTableUIFixedPos(440,470, "22");
+        VBox vbox5 = createTableUIFixedPos(440,350,  "23");
+        VBox vbox6 = createTableUIFixedPos(440,230,  "24");
+        VBox vbox7 = createTableUIFixedPos(440,110, "30");
+        VBox vbox8 = createTableUIFixedPos(440,0, "32");
+        VBox vbox9 = createTableUIFixedPos(620,470, "34");
+        VBox vbox10 = createTableUIFixedPos(620,350,  "35");
+        VBox vbox11 = createTableUIFixedPos(620,230,  "38");
+        VBox vbox12 = createTableUIFixedPos(620,110, "40");
+        VBox vbox13 = createTableUIFixedPos(620,0, "42");
+        VBox vbox14 = createTableUIFixedPos(800,470, "43");
+        VBox vbox15 = createTableUIFixedPos(800,350,  "45");
+        VBox vbox16 = createTableUIFixedPos(800,230,  "46");
+        VBox vbox17 = createTableUIFixedPos(800,110, "47");
+        VBox vbox18 = createTableUIFixedPos(800,0, "49");
+        VBox vbox19 = createTableUIFixedPos(980,470, "50");
+        VBox vbox20 = createTableUIFixedPos(980,350,  "52");
+        VBox vbox21 = createTableUIFixedPos(980,230,  "53");
+        VBox vbox22 = createTableUIFixedPos(980,110, "54");
+        VBox vbox23 = createTableUIFixedPos(980,0, "55");
+        Pane circulo = createCircularTableUIFixedPos(0,350, "12");
+        Pane circulo1 = createCircularTableUIFixedPos(0,470, "27");
+        MesasaOrg.getChildren().add(vbox);
+        MesasaOrg.getChildren().add(vbox1);
+        MesasaOrg.getChildren().add(vbox2);
+        MesasaOrg.getChildren().add(vbox3);
+        MesasaOrg.getChildren().add(vbox4);
+        MesasaOrg.getChildren().add(vbox5);
+        MesasaOrg.getChildren().add(vbox6);
+        MesasaOrg.getChildren().add(vbox7);
+        MesasaOrg.getChildren().add(vbox8);
+        MesasaOrg.getChildren().add(vbox9);
+        MesasaOrg.getChildren().add(vbox10);
+        MesasaOrg.getChildren().add(vbox11);
+        MesasaOrg.getChildren().add(vbox12);
+        MesasaOrg.getChildren().add(vbox13);
+        MesasaOrg.getChildren().add(vbox14);
+        MesasaOrg.getChildren().add(vbox15);
+        MesasaOrg.getChildren().add(vbox16);
+        MesasaOrg.getChildren().add(vbox17);
+        MesasaOrg.getChildren().add(vbox18);
+        MesasaOrg.getChildren().add(vbox19);
+        MesasaOrg.getChildren().add(vbox20);
+        MesasaOrg.getChildren().add(vbox21);
+        MesasaOrg.getChildren().add(vbox22);
+        MesasaOrg.getChildren().add(vbox23);
         MesasaOrg.getChildren().add(circulo);
+        MesasaOrg.getChildren().add(circulo1);
+
+
+    }
+
+
+    private void initializeTerrace(){
+
+        VBox vbox = createHTableUIFixedPos(150,200, "1");
+        VBox vbox1 = createHTableUIFixedPos(700,200,  "2");
+        Terraza.getChildren().add(vbox);
+        Terraza.getChildren().add(vbox1);
+
 
 
     }
