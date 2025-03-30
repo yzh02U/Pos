@@ -4,25 +4,27 @@
  VEINTIUNO DE MAYO, 977, Talagante              
  (2) 28145093                                   
                                                 
- FECHA  : 16/02/202      Hora : 16:02           
- MESA   :  -                                    
- CAJERO :  -                                    
+ FECHA  : 02/03/202      Hora : 17:22           
+ MESA   :  32                                   
+ CAJERO :  RUBEN                                
                                                 
                 DETALLE DE MESA                 
                                                 
  PRODUCTO                              PRECIO   
  --------                              ------   
- 2x WANTAN                             $6.400   
- 2x PRIMAVERA                          $6.600   
+ 1x Menú 2 Personas                    $24.300  
+ 1x Hunán (6 u)                        $5.800   
+ 1x Arrollado Primavera (4 u)          $3.300   
+ 2x Bebida                             $4.600   
                                                 
-                           SUBTOTAL    $13.000  
+                           SUBTOTAL    $38.000  
                            DESCUENTO   $0       
           --------------------------------------
-                         TOTAL A PAGAR $13.000  
+                         TOTAL A PAGAR $38.000  
           --------------------------------------
-                  10% PROPINA SUGERIDA $1.300   
+                  10% PROPINA SUGERIDA $3.800   
           --------------------------------------
-  TOTAL A PAGAR + 10% PROPINA SUGERIDA $14.300  
+  TOTAL A PAGAR + 10% PROPINA SUGERIDA $41.800  
                                                 
              NO VALIDO COMO BOLETA              
                                                 

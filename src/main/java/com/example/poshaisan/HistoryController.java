@@ -153,6 +153,7 @@ public class HistoryController {
 
     private void handleYesAction() {
         addOrderDAO.deleteAllOrdersFromDatabase();
+        addOrderDAO.deleteAllOrdersFromDatabase_command();
         sidebar.loadPage("sales", null, false);
         System.out.println("El día ha finalizado.");
     }

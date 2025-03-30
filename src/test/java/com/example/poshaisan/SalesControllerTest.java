@@ -31,7 +31,7 @@ public class SalesControllerTest extends ApplicationTest {
                                                                   ".fxml"));
         Parent root = loader.load();
         controller = loader.getController();
-        pane = controller.tablesFlowPane;
+        //pane = controller.tablesFlowPane;
         contentVBox = SidebarController.getCurrentInstance().contentVBox;
         Scene scene = new Scene(root);
         stage.setScene(scene);

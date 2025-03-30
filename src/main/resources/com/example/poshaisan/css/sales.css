@@ -1,7 +1,7 @@
 .vbox-container{
     -fx-padding: 40px;
     -fx-spacing: 40px;
-    -fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925);
+    -fx-background-color:  #e6e6e6;
 }
 
 .header-text{
@@ -72,7 +72,7 @@
 /* Border Pane*/
 
 .border-pane{
--fx-background-color:  linear-gradient(to left, #211818, #241c1a, #26201d, #282521, #2a2925);
+-fx-background-color:  #e6e6e6;
 -fx-border-width: 0;
 
 }

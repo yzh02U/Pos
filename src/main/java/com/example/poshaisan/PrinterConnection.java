@@ -57,7 +57,7 @@ public class PrinterConnection {
         printer.printTextWrap(9,10,0,48,
                               "=============================================");
 
-        printer.printTextWrap(10,11,0, 5, "ORDEN");
+        printer.printTextWrap(10,11,0, 5, "GARZON");
         printer.printTextWrap(10,11, 10, 14, "MESA");
         printer.printTextWrap(10,11, 20, 30, "ID MESA");
         printer.printTextWrap(10,11,35, 48, "MONTO");
@@ -70,7 +70,7 @@ public class PrinterConnection {
 
         for(StoredOrder order : ordersList){
             printer.printTextWrap(toPrintCol, toPrintCol+1, 0, 5,
-                                  Integer.toString(ordersCounter) );
+                                  order.getServer() );
             printer.printTextWrap(toPrintCol, toPrintCol+1, 10, 14,
                                   order.getIsTable() ? "SI" : "NO");
             printer.printTextWrap(toPrintCol, toPrintCol+1, 20, 30,
@@ -184,7 +184,7 @@ public class PrinterConnection {
             printJob.print(document, attributeSet);
             if (!isCopy){
                 orderDAO.addOrderToDatabase(order, isTable, utils.getDateTime());
-                orderDAO.deleteOrderFromDatabase_Command(order.getId());
+                orderDAO.deleteOrderFromDatabase_Command(order.getTableName());
 
             }
         } catch (PrintException e) {
@@ -245,12 +245,28 @@ public class PrinterConnection {
     public void Add_to_BD(TableOrder order, Boolean isTable){
 
         orderDAO.addOrderToDatabase(order, isTable, utils.getDateTime());
-        orderDAO.deleteOrderFromDatabase_Command(order.getId());
+        orderDAO.deleteOrderFromDatabase_Command(order.getTableName());
+       
+    }
+
+    public List<Integer> getNonTableOrders(){
+
+        return orderDAO.getNonTableOrdersFromDatabase();
+    }
+
+    public List<Integer> getNonTableOrders_command(){
+
+        return orderDAO.getNonTableOrdersFromDatabase_Command();
     }
 
     public void Delete_from_BD(TableOrder order){
 
-        orderDAO.deleteOrderFromDatabase_Command(order.getId());
+        orderDAO.deleteOrderFromDatabase_Command(order.getTableName());
+    }
+
+    public Integer Get_Latest_id_from_Command(){
+
+       return  orderDAO.getLastOrderIdFromDatabase_Command();
     }
 
     public void printCommand(TableOrder order, boolean isTable) throws PrinterException {

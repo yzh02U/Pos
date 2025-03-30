@@ -1,6 +1,7 @@
 package com.example.poshaisan;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.sql.*;
 import java.time.DayOfWeek;
@@ -52,43 +53,132 @@ public class AddOrderDAO {
      * @param isTable     A Boolean indicating if the order is for a table.
      * @param endDateTime The end date and time of the order.
      */
-    public void addOrderToDatabase(TableOrder order, Boolean isTable,
-                                   LocalDateTime endDateTime) {
+    public void addOrderToDatabase(TableOrder order, Boolean isTable, LocalDateTime endDateTime) {
         String query = "INSERT INTO orders (isTable, products, server, " +
-                "startDateTime, endDateTime, total, name) VALUES (?, " +
-                "?, ?, " +
-                "?, ?, ?, ?)";
-        Timestamp formattedStartDateTime = Timestamp.valueOf(
-                order.getStartDate());
+                "startDateTime, endDateTime, total, name) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        if (order == null || order.getStartDate() == null || endDateTime == null ||
+                order.getTableName() == null || order.getServer() == null) {
+            logger.severe("Invalid order data: one or more required fields are null.");
+            throw new IllegalArgumentException("Order data cannot be null");
+        }
+
+        Timestamp formattedStartDateTime = Timestamp.valueOf(order.getStartDate());
         Timestamp formattedEndDateTime = Timestamp.valueOf(endDateTime);
         int totalPrice = order.getItemsSum() - order.getDiscount();
 
-        try (Connection connection = Database.getConnection(URL, USER,
-                PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(
-                     query)) {
-            preparedStatement.setBoolean(1, isTable);
-            preparedStatement.setString(2, order.itemsToJson());
-            preparedStatement.setString(3, order.getServer());
-            preparedStatement.setTimestamp(4, formattedStartDateTime);
-            preparedStatement.setTimestamp(5, formattedEndDateTime);
-            preparedStatement.setInt(6, totalPrice);
-            preparedStatement.setString(7, order.getTableName());
-            preparedStatement.executeUpdate();
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD)) {
+            if (connection == null || connection.isClosed()) {
+                logger.severe("Database connection is null or closed");
+                throw new SQLException("Failed to establish a database connection");
+            }
 
+            try (PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+                preparedStatement.setBoolean(1, isTable);
+                preparedStatement.setString(2, order.itemsToJson());
+                preparedStatement.setString(3, order.getServer());
+                preparedStatement.setTimestamp(4, formattedStartDateTime);
+                preparedStatement.setTimestamp(5, formattedEndDateTime);
+                preparedStatement.setInt(6, totalPrice);
+                preparedStatement.setString(7, order.getTableName());
+
+                int affectedRows = preparedStatement.executeUpdate();
+                if (affectedRows == 0) {
+                    logger.severe("Insert failed, no rows affected");
+                    throw new SQLException("Creating order failed, no rows affected");
+                }
+
+                if (!connection.getAutoCommit()) {
+                    connection.commit();
+                }
+            }
         } catch (SQLException e) {
-            logger.severe("Error while adding order to database");
-            logger.severe(e.toString());
+            logger.severe("Error while adding order to database: " + e.getMessage());
+            throw new RuntimeException("Database error: " + e.getMessage(), e);
         } catch (JsonProcessingException e) {
-            logger.severe("Error while processing order items to JSON");
-            logger.severe(e.toString());
+            logger.severe("Error while processing order items to JSON: " + e.getMessage());
+            throw new RuntimeException("JSON processing error: " + e.getMessage(), e);
         }
     }
+
+
+    public void addOrderToDatabaseAndDelete(TableOrder order, Boolean isTable, LocalDateTime endDateTime) {
+        String insertOrderQuery = "INSERT INTO orders (isTable, products, server, " +
+                "startDateTime, endDateTime, total, name) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        String deleteCommandQuery = "DELETE FROM command WHERE name = ?";
+
+        if (order == null || order.getStartDate() == null || endDateTime == null ||
+                order.getTableName() == null || order.getServer() == null) {
+            logger.severe("Invalid order data: one or more required fields are null.");
+            throw new IllegalArgumentException("Order data cannot be null");
+        }
+
+        Timestamp formattedStartDateTime = Timestamp.valueOf(order.getStartDate());
+        Timestamp formattedEndDateTime = Timestamp.valueOf(endDateTime);
+        int totalPrice = order.getItemsSum() - order.getDiscount();
+
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD)) {
+            if (connection == null || connection.isClosed()) {
+                logger.severe("Database connection is null or closed");
+                throw new SQLException("Failed to establish a database connection");
+            }
+
+            // Desactivar auto-commit para controlar la transacción
+            connection.setAutoCommit(false);
+
+            try (
+                    PreparedStatement insertStmt = connection.prepareStatement(insertOrderQuery);
+                    PreparedStatement deleteStmt = connection.prepareStatement(deleteCommandQuery)
+            ) {
+                // --- INSERTAR EN ORDERS ---
+                insertStmt.setBoolean(1, isTable);
+                insertStmt.setString(2, order.itemsToJson());
+                insertStmt.setString(3, order.getServer());
+                insertStmt.setTimestamp(4, formattedStartDateTime);
+                insertStmt.setTimestamp(5, formattedEndDateTime);
+                insertStmt.setInt(6, totalPrice);
+                insertStmt.setString(7, order.getTableName());
+
+                int affectedRows = insertStmt.executeUpdate();
+                if (affectedRows == 0) {
+                    logger.severe("Insert failed, no rows affected");
+                    throw new SQLException("Creating order failed, no rows affected");
+                }
+
+                // --- ELIMINAR DE COMMAND ---
+                deleteStmt.setString(1, order.getTableName());
+                int deletedRows = deleteStmt.executeUpdate();
+                if (deletedRows > 0) {
+                    logger.info("Order with name " + order.getTableName() + " deleted successfully from command.");
+                } else {
+                    logger.warning("No order found with name " + order.getTableName() + " in command.");
+                }
+
+                // --- COMMIT FINAL ---
+                connection.commit();
+
+            } catch (SQLException e) {
+                connection.rollback(); // Si algo falla, deshacemos todo
+                logger.severe("Transaction failed and rolled back: " + e.getMessage());
+                throw e;
+            }
+
+        } catch (SQLException e) {
+            logger.severe("Database error: " + e.getMessage());
+            throw new RuntimeException("Database error: " + e.getMessage(), e);
+        } catch (JsonProcessingException e) {
+            logger.severe("Error while processing order items to JSON: " + e.getMessage());
+            throw new RuntimeException("JSON processing error: " + e.getMessage(), e);
+        }
+
+    }
+
 
     public void UpdateOrderInDatabase(TableOrder order, Boolean isTable,
                                       LocalDateTime endDateTime) {
         String query = "UPDATE command SET isTable = ?, products = ?, server = ?, " +
-                "startDateTime = ?, endDateTime = ?, total = ?, name = ?  WHERE id = ?";
+                "startDateTime = ?, endDateTime = ?, total = ?  WHERE name = ?";
         Timestamp formattedStartDateTime = Timestamp.valueOf(order.getStartDate());
         Timestamp formattedEndDateTime = Timestamp.valueOf(endDateTime);
         int totalPrice = order.getItemsSum() - order.getDiscount();
@@ -104,7 +194,6 @@ public class AddOrderDAO {
             preparedStatement.setTimestamp(5, formattedEndDateTime);
             preparedStatement.setInt(6, totalPrice);
             preparedStatement.setString(7, order.getTableName());
-            preparedStatement.setString(8, order.getId().toString()); // Unique name for identification
 
             // Execute the update query
             int rowsUpdated = preparedStatement.executeUpdate();
@@ -172,21 +261,21 @@ public class AddOrderDAO {
     }
 
 
-    public void deleteOrderFromDatabase_Command(int id) {
-        String query = "DELETE FROM command WHERE id = ?";
+    public void deleteOrderFromDatabase_Command(String name) {
+        String query = "DELETE FROM command WHERE name = ?";
 
         try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
             // Set the id parameter
-            preparedStatement.setInt(1, id);
+            preparedStatement.setString(1, name);
 
             // Execute the delete operation
             int rowsAffected = preparedStatement.executeUpdate();
             if (rowsAffected > 0) {
-                logger.info("Order with ID " + id + " deleted successfully.");
+                logger.info("Order with name " + name + " deleted successfully.");
             } else {
-                logger.warning("No order found with ID " + id + ".");
+                logger.warning("No order found with name " + name + ".");
             }
 
         } catch (SQLException e) {
@@ -197,6 +286,22 @@ public class AddOrderDAO {
 
     public void deleteAllOrdersFromDatabase() {
         String query = "TRUNCATE TABLE orders;";
+
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            // Ejecutar la operación de eliminación
+            preparedStatement.executeUpdate();
+            logger.info("SE HAN ELIMINADO TODAS LAS ORDENES DE ORDERS");
+
+        } catch (SQLException e) {
+            logger.severe("ERROR AL ELIMINAR DATOS DE LA TABLA ORDERS");
+            logger.severe(e.toString());
+        }
+    }
+
+    public void deleteAllOrdersFromDatabase_command() {
+        String query = "TRUNCATE TABLE command;";
 
         try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
@@ -250,6 +355,79 @@ public class AddOrderDAO {
     }
 
 
+    public Integer getLastOrderIdFromDatabase_Command() {
+        String query = "SELECT MAX(id) AS last_id FROM command";
+
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            if (resultSet.next()) {
+                return resultSet.getInt("last_id"); // Retorna el valor máximo del ID
+            } else {
+                logger.warning("No orders found in the database.");
+                return 0;
+            }
+
+        } catch (SQLException e) {
+            logger.severe("Error while retrieving last order ID from database");
+            logger.severe(e.toString());
+            return null;
+        }
+    }
+
+
+
+    public List<Integer> getNonTableOrdersFromDatabase_Command() {
+        String query = "SELECT id FROM command WHERE isTable = 0 ORDER BY id DESC";
+        List<Integer> orderIds = new ArrayList<>();
+
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                orderIds.add(resultSet.getInt("id")); // Agrega las IDs de los pedidos
+            }
+
+            if (orderIds.isEmpty()) {
+                logger.warning("No non-table orders found in the database.");
+            }
+
+        } catch (SQLException e) {
+            logger.severe("Error while retrieving non-table orders from database");
+            logger.severe(e.toString());
+        }
+
+        return orderIds; // Retorna la lista de IDs
+    }
+
+
+    public List<Integer> getNonTableOrdersFromDatabase() {
+        String query = "SELECT id FROM orders WHERE isTable = 0 ORDER BY id DESC";
+        List<Integer> orderIds = new ArrayList<>();
+
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(query);
+             ResultSet resultSet = preparedStatement.executeQuery()) {
+
+            while (resultSet.next()) {
+                orderIds.add(resultSet.getInt("id")); // Agrega las IDs de los pedidos
+            }
+
+            if (orderIds.isEmpty()) {
+                logger.warning("No non-table orders found in the database.");
+            }
+
+        } catch (SQLException e) {
+            logger.severe("Error while retrieving non-table orders from database");
+            logger.severe(e.toString());
+        }
+
+        return orderIds; // Retorna la lista de IDs
+    }
+
+
     public List<StoredOrder> fetchOrdersFromDatabase_Command() {
         String query = "SELECT * FROM command";
         List<StoredOrder> orders = new ArrayList<>();
@@ -286,21 +464,26 @@ public class AddOrderDAO {
     }
 
     public List<StoredOrder> fetchDailyOrdersFromDatabase() {
-        String query = "SELECT * FROM orders WHERE DATE(endDateTime) = ? ";
+        String query = "SELECT * FROM orders WHERE startDateTime >= ? AND endDateTime <= ?";
         LocalDate today = utils.getDateTime().toLocalDate();
+
+        // Definir el rango de búsqueda
+        LocalDateTime startOfDay = today.atTime(10, 0); // 10:00 hrs
+        LocalDateTime endOfDay = today.atTime(23, 59); // 23:59 hrs
+
         List<StoredOrder> orders = new ArrayList<>();
 
-        try (Connection connection = Database.getConnection(URL, USER,
-                PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(
-                     query)) {
-            preparedStatement.setDate(1, java.sql.Date.valueOf(today));
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(query)) {
+
+            // Establecer los valores de los parámetros de la consulta
+            preparedStatement.setTimestamp(1, java.sql.Timestamp.valueOf(startOfDay));
+            preparedStatement.setTimestamp(2, java.sql.Timestamp.valueOf(endOfDay));
+
             ResultSet resultSet = preparedStatement.executeQuery();
             while (resultSet.next()) {
-                LocalDateTime startDateTime = resultSet.getTimestamp(
-                        "startDateTime").toLocalDateTime();
-                LocalDateTime endDateTime = resultSet.getTimestamp(
-                        "endDateTime").toLocalDateTime();
+                LocalDateTime startDateTime = resultSet.getTimestamp("startDateTime").toLocalDateTime();
+                LocalDateTime endDateTime = resultSet.getTimestamp("endDateTime").toLocalDateTime();
 
                 orders.add(new StoredOrder(
                         resultSet.getInt("id"),
@@ -320,6 +503,7 @@ public class AddOrderDAO {
         }
         return orders;
     }
+
 
     /**
      * Resets (deletes) all orders before the current Monday

@@ -183,7 +183,7 @@ public class AddOrderController {
                         productInput.requestFocus();
                     }
                     backCommandBtn.setOnAction(evt -> printOrder_Command(isTable));
-                    printBtn.setOnAction(evt -> Add_to_BD(order, isTable) );
+                    printBtn.setOnAction(evt -> Add_to_BD(currentOrder, isTable) );
                     clearBtn.setOnAction(evt -> Delete_From_BD());
                     copyBtn.setOnAction(evt -> printOrder(isTable, true));
 
@@ -202,13 +202,8 @@ public class AddOrderController {
             }
         });
 
-        if(!isTable){
+        tableInput.setEditable(false);
 
-            tableInput.setEditable(true);
-        }
-        else {
-            tableInput.setEditable(false);
-        }
 
     }
 

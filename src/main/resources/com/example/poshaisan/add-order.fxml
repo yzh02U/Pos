@@ -39,7 +39,7 @@
                             <Font name="System Bold" size="16.0" />
                         </font>
                     </Label>
-                    <Label layoutX="5.0" layoutY="44.0" text="Descuento/打折" textFill="#ff7b00">
+                    <Label layoutX="5.0" layoutY="44.0" text="Descuento/打折 clp" textFill="#ff7b00">
                         <font>
                             <Font name="System Bold" size="16.0" />
                         </font>
@@ -49,12 +49,12 @@
                             <Font size="16.0" />
                         </font>
                     </Label>
-                    <Label layoutX="6.0" layoutY="75.0" text="Total/一共" textFill="WHITE">
+                    <Label layoutX="6.0" layoutY="130.0" text="Total/一共" textFill="WHITE">
                         <font>
                             <Font name="System Bold" size="16.0" />
                         </font>
                     </Label>
-                    <Label fx:id="totalLabel" alignment="CENTER_RIGHT" layoutX="191.0" layoutY="74.0" prefHeight="26.0" prefWidth="168.0" text="\$0" textFill="WHITE">
+                    <Label fx:id="totalLabel" alignment="CENTER_RIGHT" layoutX="191.0" layoutY="130.0" prefHeight="26.0" prefWidth="168.0" text="\$0" textFill="WHITE">
                         <font>
                             <Font size="16.0" />
                         </font>

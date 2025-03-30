@@ -24,14 +24,15 @@ public class SalesController {
 
     // Fields --------------------------------------------------
     public List<StoredOrder> Orders;
-    public Tab tablesTab;
+   // public Tab tablesTab;
     public VBox salesSection;
     public Label headerTitle;
-    public Button addTableBtn;
+    // public Button addTableBtn;
     public Button addOrderBtn;
     public Tab ordersTab;
     public Pane MesasaOrg;
     public Pane Terraza;
+    private int current_id = 0;
     private static final SidebarController sidebar =
             SidebarController.getInstance();
     private static final Utils utils = new Utils();
@@ -43,8 +44,8 @@ public class SalesController {
     @FXML
     AnchorPane TableUI;
 */
-    @FXML
-    FlowPane tablesFlowPane;
+  //  @FXML
+ //   FlowPane tablesFlowPane;
     @FXML
     FlowPane takeoutsFlowPane;
 
@@ -63,6 +64,15 @@ public class SalesController {
         Orders = get_order.fetchOrdersFromDatabase_Command();
         tables.clear();
         takeouts.clear();
+
+
+        PrinterConnection print = new PrinterConnection();
+        //List<StoredOrder> orders = print.getOrders();
+        //List<StoredOrder> orders_dos = print.getOrders_command();
+        //current_id = orders.size() + orders_dos.size();
+        current_id = print.Get_Latest_id_from_Command();
+        System.out.println("Esta es la ultima id: " + String.valueOf(current_id));
+
 
         Orders.forEach(orden -> {
 
@@ -88,8 +98,9 @@ public class SalesController {
 
         });
 
-        tables.forEach(order -> tablesFlowPane.getChildren()
-                .add(createTableUI(order)));
+     //   tables.forEach(order -> tablesFlowPane.getChildren()//          .add(createTableUI(order)));
+
+
 
         takeouts.forEach(order -> takeoutsFlowPane.getChildren()
                 .add(createTakeoutUI(order)));
@@ -97,15 +108,6 @@ public class SalesController {
 
         initializeMainLobby();
         initializeTerrace();
-/*
-        TableUI.setPrefSize(600, 400);
-
-        VBox caja = createVBoxUI();
-        caja.setLayoutX(0);
-        caja.setLayoutY(0);
-        TableUI.getChildren().add(caja);
-
- */
     }
 
     /**
@@ -115,9 +117,12 @@ public class SalesController {
      * sidebar.
      */
     public void loadOrder() {
-        PrinterConnection print = new PrinterConnection();
 
         TableOrder newOrder = createTakeoutOrder();
+        PrinterConnection print = new PrinterConnection();
+        List<Integer> takeoutsId = print.getNonTableOrders();
+        List<Integer> takeoutsId_command = print.getNonTableOrders_command();
+        newOrder.setTableName(String.valueOf(takeoutsId.size() + takeoutsId_command.size() + 1001));
         takeouts.add(newOrder);
         sidebar.loadPage("add-order", newOrder, false);
     }
@@ -126,18 +131,15 @@ public class SalesController {
 
     public TableOrder createTakeoutOrder() {
 
-        PrinterConnection print = new PrinterConnection();
-        List<StoredOrder> orders = print.getOrders();
-        List<StoredOrder> orders_dos = print.getOrders_command();
-        int size = orders.size() + orders_dos.size();
+        current_id += 1;
+        System.out.println(current_id);
 
         /*
         return new TableOrder(getLatestTakeoutId(),
                               FXCollections.observableArrayList(),
                               utils.getDateTime());
          */
-
-        return new TableOrder(size,
+        return new TableOrder(current_id ,
                 FXCollections.observableArrayList(),
                 utils.getDateTime());
 
@@ -163,13 +165,9 @@ public class SalesController {
      */
     public TableOrder createTableOrder() {
 
-
-        PrinterConnection print = new PrinterConnection();
-        List<StoredOrder> orders = print.getOrders();
-        List<StoredOrder> orders_dos = print.getOrders_command();
-        int size = orders.size() + orders_dos.size();
-
-        return new TableOrder(size,
+        current_id += 1;
+        System.out.println(current_id);
+        return new TableOrder(current_id,
                               FXCollections.observableArrayList(),
                               utils.getDateTime());
 
@@ -230,10 +228,10 @@ public class SalesController {
     }
 
 
-    private Label createTableLabelCircularUI(TableOrder order) {
-        Label tableName = new Label(order.getTableName());
+    private Label createTableLabelCircularUI(String name) {
+        Label tableName = new Label(name);
         tableName.setLayoutX(40); // Posición X
-        tableName.setLayoutY(40);  // Posición Y
+        tableName.setLayoutY(10);  // Posición Y
 
         tableName.getStyleClass().add("table-name-circular-label");
         return tableName;
@@ -255,8 +253,8 @@ public class SalesController {
 
     private Label createTableServerCircularUI(TableOrder order) {
         Label server = new Label(order.getServer());
-        server.setLayoutX(25); // Posición X
-        server.setLayoutY(10);  // Posición Y
+        server.setLayoutX(45); // Posición X
+        server.setLayoutY(40);  // Posición Y
 
         server.getStyleClass().add("table-server-circular-label");
         return server;
@@ -304,7 +302,7 @@ public class SalesController {
                 final TableOrder finalOrder = table; // Variable final dentro del if
                 vbox.setOnMouseClicked(
                         event -> sidebar.loadPage("add-order", finalOrder, true));
-                vbox.getChildren().addAll(createTableLabelCircularUI(finalOrder), createTableServerCircularUI(finalOrder));
+                vbox.getChildren().addAll(createTableLabelCircularUI(name), createTableServerCircularUI(finalOrder));
                 vbox.setStyle("-fx-background-color:  #ff4d4d;");
 
 
@@ -312,14 +310,20 @@ public class SalesController {
             }
         }
 
-        TableOrder newOrder = createTableOrder();
-        newOrder.setTableName(name);
-        tables.add(newOrder); // Add the new order to the tables list
 
-        vbox.getChildren().addAll(createTableLabelCircularUI(newOrder), createTableServerCircularUI(newOrder));
+        vbox.getChildren().addAll(createTableLabelCircularUI(name)/*, createTableServerCircularUI(newOrder)*/);
         vbox.setOnMouseClicked(
-                event -> sidebar.loadPage("add-order", newOrder, true));
-        vbox.setStyle("-fx-background-color: #66ff99;");
+                event ->{
+
+                    TableOrder newOrder = createTableOrder();
+                    newOrder.setTableName(name);
+                    tables.add(newOrder); // Add the new order to the tables list
+                    PrinterConnection print = new PrinterConnection();
+                    print.AddOrderToBD(newOrder, true);
+                    sidebar.loadPage("add-order", newOrder, true);
+
+                } );
+        vbox.setStyle("-fx-background-color: #4d79ff;");
         return vbox;
     }
 
@@ -340,7 +344,7 @@ public class SalesController {
                 final TableOrder finalOrder = table; // Variable final dentro del if
                 vbox.setOnMouseClicked(
                         event -> sidebar.loadPage("add-order", finalOrder, true));
-                vbox.getChildren().addAll(createTableLabelCircularUI(finalOrder), createTableServerCircularUI(finalOrder));
+                vbox.getChildren().addAll(createTableLabelCircularUI(name), createTableServerCircularUI(finalOrder));
                 vbox.setStyle("-fx-background-color:  #ff4d4d;");
 
 
@@ -348,52 +352,23 @@ public class SalesController {
             }
         }
 
-        TableOrder newOrder = createTableOrder();
-        newOrder.setTableName(name);
-        tables.add(newOrder); // Add the new order to the tables list
 
-        vbox.getChildren().addAll(createTableLabelCircularUI(newOrder), createTableServerCircularUI(newOrder));
+        vbox.getChildren().addAll(createTableLabelCircularUI(name)/*, createTableServerCircularUI(newOrder)*/);
         vbox.setOnMouseClicked(
-                event -> sidebar.loadPage("add-order", newOrder, true));
-        vbox.setStyle("-fx-background-color: #66ff99;");
+                event ->{
+
+                    TableOrder newOrder = createTableOrder();
+                    newOrder.setTableName(name);
+                    tables.add(newOrder); // Add the new order to the tables list
+                    PrinterConnection print = new PrinterConnection();
+                    print.AddOrderToBD(newOrder, true);
+                    sidebar.loadPage("add-order", newOrder, true);
+
+                } );
+        vbox.setStyle("-fx-background-color: #4d79ff;");
         return vbox;
     }
 
-
-    private VBox createVTableUIFixedPos( float x, float y, String name ){
-
-        VBox vbox = createVBoxUI(100, 175);
-        vbox.setLayoutX(x);
-        vbox.setLayoutY(y);
-        /*vbox.getChildren().addAll(createTableLabelUI(order), createTableServerUI(order));
-        vbox.setOnMouseClicked(
-                event -> sidebar.loadPage("add-order", order, false));
-                */
-
-
-        for (TableOrder table : tables) {
-            if (table.getTableName().equals(name)) {
-                final TableOrder finalOrder = table; // Variable final dentro del if
-                vbox.setOnMouseClicked(
-                        event -> sidebar.loadPage("add-order", finalOrder, true));
-                vbox.getChildren().addAll(createTableLabelCircularUI(finalOrder), createTableServerCircularUI(finalOrder));
-                vbox.setStyle("-fx-background-color:  #ff4d4d;");
-
-
-                return vbox;
-            }
-        }
-
-        TableOrder newOrder = createTableOrder();
-        newOrder.setTableName(name);
-        tables.add(newOrder); // Add the new order to the tables list
-
-        vbox.getChildren().addAll(createTableLabelCircularUI(newOrder), createTableServerCircularUI(newOrder));
-        vbox.setOnMouseClicked(
-                event -> sidebar.loadPage("add-order", newOrder, true));
-        vbox.setStyle("-fx-background-color: #66ff99;");
-        return vbox;
-    }
 
     private Pane createCircularTableUIFixedPos( float x, float y, String name ){
 
@@ -407,81 +382,57 @@ public class SalesController {
                 final TableOrder finalOrder = table; // Variable final dentro del if
                 circle.setOnMouseClicked(
                         event -> sidebar.loadPage("add-order", finalOrder, true));
-                circle.getChildren().addAll(createTableLabelCircularUI(finalOrder), createTableServerCircularUI(finalOrder));
+                circle.getChildren().addAll(createTableLabelCircularUI(name), createTableServerCircularUI(finalOrder));
                 circle.setStyle("-fx-background-color:  #ff4d4d;");
                 return circle;
             }
         }
 
-        TableOrder newOrder = createTableOrder();
-        newOrder.setTableName(name);
-        tables.add(newOrder); // Add the new order to the tables list
 
-        circle.getChildren().addAll(createTableLabelCircularUI(newOrder), createTableServerCircularUI(newOrder));
+        circle.getChildren().addAll(createTableLabelCircularUI(name)/*, createTableServerCircularUI(newOrder)*/);
         circle.setOnMouseClicked(
-                event -> sidebar.loadPage("add-order", newOrder, true));
-        circle.setStyle("-fx-background-color: #66ff99;");
+                event ->{
+
+                    TableOrder newOrder = createTableOrder();
+                    newOrder.setTableName(name);
+                    tables.add(newOrder); // Add the new order to the tables list
+                    PrinterConnection print = new PrinterConnection();
+                    print.AddOrderToBD(newOrder, true);
+                    sidebar.loadPage("add-order", newOrder, true);
+
+                } );
+        circle.setStyle("-fx-background-color: #4d79ff;");
 
         return circle;
     }
 
-    private void initializeMainLobby(){
+    private void initializeMainLobby() {
+        List<int[]> mesasRectangulares = List.of(
+                new int[]{260, 470, 9}, new int[]{260, 350, 10}, new int[]{260, 230, 15}, new int[]{260, 110, 20},
+                new int[]{440, 470, 22}, new int[]{440, 350, 23}, new int[]{440, 230, 24}, new int[]{440, 110, 30},
+                new int[]{440, 0, 32}, new int[]{620, 470, 34}, new int[]{620, 350, 35}, new int[]{620, 230, 38},
+                new int[]{620, 110, 40}, new int[]{620, 0, 42}, new int[]{800, 470, 43}, new int[]{800, 350, 45},
+                new int[]{800, 230, 46}, new int[]{800, 110, 47}, new int[]{800, 0, 49}, new int[]{980, 470, 50},
+                new int[]{980, 350, 52}, new int[]{980, 230, 53}, new int[]{980, 110, 54}, new int[]{980, 0, 55}
+        );
 
-        VBox vbox = createTableUIFixedPos(260,470, "9");
-        VBox vbox1 = createTableUIFixedPos(260,350,  "10");
-        VBox vbox2 = createTableUIFixedPos(260,230,  "15");
-        VBox vbox3 = createTableUIFixedPos(260,110, "20");
-        VBox vbox4 = createTableUIFixedPos(440,470, "22");
-        VBox vbox5 = createTableUIFixedPos(440,350,  "23");
-        VBox vbox6 = createTableUIFixedPos(440,230,  "24");
-        VBox vbox7 = createTableUIFixedPos(440,110, "30");
-        VBox vbox8 = createTableUIFixedPos(440,0, "32");
-        VBox vbox9 = createTableUIFixedPos(620,470, "34");
-        VBox vbox10 = createTableUIFixedPos(620,350,  "35");
-        VBox vbox11 = createTableUIFixedPos(620,230,  "38");
-        VBox vbox12 = createTableUIFixedPos(620,110, "40");
-        VBox vbox13 = createTableUIFixedPos(620,0, "42");
-        VBox vbox14 = createTableUIFixedPos(800,470, "43");
-        VBox vbox15 = createTableUIFixedPos(800,350,  "45");
-        VBox vbox16 = createTableUIFixedPos(800,230,  "46");
-        VBox vbox17 = createTableUIFixedPos(800,110, "47");
-        VBox vbox18 = createTableUIFixedPos(800,0, "49");
-        VBox vbox19 = createTableUIFixedPos(980,470, "50");
-        VBox vbox20 = createTableUIFixedPos(980,350,  "52");
-        VBox vbox21 = createTableUIFixedPos(980,230,  "53");
-        VBox vbox22 = createTableUIFixedPos(980,110, "54");
-        VBox vbox23 = createTableUIFixedPos(980,0, "55");
-        Pane circulo = createCircularTableUIFixedPos(0,350, "12");
-        Pane circulo1 = createCircularTableUIFixedPos(0,470, "27");
-        MesasaOrg.getChildren().add(vbox);
-        MesasaOrg.getChildren().add(vbox1);
-        MesasaOrg.getChildren().add(vbox2);
-        MesasaOrg.getChildren().add(vbox3);
-        MesasaOrg.getChildren().add(vbox4);
-        MesasaOrg.getChildren().add(vbox5);
-        MesasaOrg.getChildren().add(vbox6);
-        MesasaOrg.getChildren().add(vbox7);
-        MesasaOrg.getChildren().add(vbox8);
-        MesasaOrg.getChildren().add(vbox9);
-        MesasaOrg.getChildren().add(vbox10);
-        MesasaOrg.getChildren().add(vbox11);
-        MesasaOrg.getChildren().add(vbox12);
-        MesasaOrg.getChildren().add(vbox13);
-        MesasaOrg.getChildren().add(vbox14);
-        MesasaOrg.getChildren().add(vbox15);
-        MesasaOrg.getChildren().add(vbox16);
-        MesasaOrg.getChildren().add(vbox17);
-        MesasaOrg.getChildren().add(vbox18);
-        MesasaOrg.getChildren().add(vbox19);
-        MesasaOrg.getChildren().add(vbox20);
-        MesasaOrg.getChildren().add(vbox21);
-        MesasaOrg.getChildren().add(vbox22);
-        MesasaOrg.getChildren().add(vbox23);
-        MesasaOrg.getChildren().add(circulo);
-        MesasaOrg.getChildren().add(circulo1);
+        // Agregar mesas rectangulares
+        for (int[] mesa : mesasRectangulares) {
+            VBox vbox = createTableUIFixedPos(mesa[0], mesa[1], String.valueOf(mesa[2]));
+            MesasaOrg.getChildren().add(vbox);
+        }
 
+        // Mesas circulares
+        List<int[]> mesasCirculares = List.of(
+                new int[]{0, 350, 12}, new int[]{0, 470, 27}
+        );
 
+        for (int[] mesa : mesasCirculares) {
+            Pane circulo = createCircularTableUIFixedPos(mesa[0], mesa[1], String.valueOf(mesa[2]));
+            MesasaOrg.getChildren().add(circulo);
+        }
     }
+
 
 
     private void initializeTerrace(){
