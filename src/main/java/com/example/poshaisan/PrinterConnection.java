@@ -242,6 +242,7 @@ public class PrinterConnection {
         }
     }
 
+    // Se agregan mesas a la BD
     public void Add_to_BD(TableOrder order, Boolean isTable){
 
         orderDAO.addOrderToDatabase(order, isTable, utils.getDateTime());
