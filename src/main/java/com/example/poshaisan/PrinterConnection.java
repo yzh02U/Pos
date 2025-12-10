@@ -145,8 +145,10 @@ public class PrinterConnection {
                            boolean isTable, boolean isCopy) throws PrinterException {
         PrinterMatrix printer = new PrinterMatrix();
         FileInputStream inputStream = null;
+
+        // 1. AUMENTAMOS EL TAMAÑO (+ 5 líneas extra para asegurar espacio para el corte)
         int voucherSize = (isTable) ?
-                order.getItems().size() + 35 : order.getItems().size() + 31;
+                order.getItems().size() + 50 : order.getItems().size() + 46;
 
         printer.setOutSize(voucherSize, 48);
 
@@ -155,9 +157,27 @@ public class PrinterConnection {
         formatTime(printer);
         printOrderDetails(printer, order);
         int counter = formatOrderItems(order.getItems(), printer);
+
+
+        // CAMBIO AQUÍ: Capturamos la última línea real
+        int lastLine = formatSummary(order, isTable, printer, counter);
+
+
+        // formatSummary imprime el total.
         formatSummary(order, isTable, printer, counter);
 
+        // 2. AGREGAMOS EL COMANDO DE CORTE
+        // Calculamos dónde terminó de escribir formatSummary.
+        // formatSummary ocupa unas 11 líneas después del 'counter'.
+        int cutPosition = lastLine + 2;
+
+        // COMANDO: \u001B\u0064\u0003 (Avanzar 3 líneas) + \u001B\u0069 (Cortar papel)
+        String PAPER_CUT = "\u001B\u0064\u0003" + "\u001B\u0069";
+
+        printer.printTextWrap(cutPosition, cutPosition + 1, 1, 48, PAPER_CUT);
+
         printer.toFile("impresion.txt");
+
 
         try {
             inputStream = new FileInputStream("impresion.txt");
@@ -209,6 +229,11 @@ public class PrinterConnection {
         printOrderDetails(printer, order);
         int counter = formatOrderItems(order.getItems(), printer);
         formatSummary(order, isTable, printer, counter);
+
+        // 2. AGREGAMOS EL CORTE
+        int cutPosition = counter + 13;
+        String PAPER_CUT = "\u001B\u0064\u0003" + "\u001B\u0069";
+        printer.printTextWrap(cutPosition, cutPosition + 1, 1, 48, PAPER_CUT);
 
         printer.toFile("impresion.txt");
 
@@ -305,6 +330,10 @@ public class PrinterConnection {
         lastPrintedLine += 2;
         printer.printTextWrap(lastPrintedLine, lastPrintedLine, 1, 35, "\u001B\u0069");
 
+
+        int finalLine = lastPrintedLine + 1;
+        printer.printTextWrap(finalLine, finalLine, 1, 1, "\u001D\u0021\u0000"); // Asegurar normalidad
+
         // Guardar en archivo antes de imprimir
         printer.toFile("impresion.txt");
 
@@ -348,9 +377,11 @@ public class PrinterConnection {
         return orderDAO.fetchOrdersFromDatabase();
     }
 
-    public void AddOrderToBD(TableOrder order, boolean isTable)
-    {
-        orderDAO.addOrderToDatabase_Command(order, isTable, utils.getDateTime());
+    // Cambiar de void a Integer
+    public Integer AddOrderToBD(TableOrder order, boolean isTable) {
+        // Capturamos el ID que retorna el DAO
+        Integer newId = orderDAO.addOrderToDatabase_Command(order, isTable, utils.getDateTime());
+        return newId;
     }
 
     public void UpdateOrderToBD(TableOrder order, boolean isTable)
@@ -384,12 +415,19 @@ public class PrinterConnection {
      * @param printer the PrinterMatrix instance
      */
     private void printHeader(PrinterMatrix printer) {
+        // COMANDOS ESC/POS
+        // \u001B\u0040 = ESC @ = Inicializar impresora (Borra configuraciones previas)
+        // \u001D\u0021\u0000 = GS ! 0 = Forzar tamaño de texto a Normal
+        String INIT_AND_NORMAL = "\u001B\u0040\u001D\u0021\u0000";
+
+        // Agregamos los comandos ANTES del texto del nombre del restaurante
         printer.printTextWrap(1, 2, 10, 48,
-                              " - " + "RESTAURANT "+ utils.RESTAURANT_NAME.toUpperCase() +
-                " -" +
-                " ");
+                INIT_AND_NORMAL + " - " + "RESTAURANT "+ utils.RESTAURANT_NAME.toUpperCase() +
+                        " -" +
+                        " ");
+
         printer.printTextWrap(3, 4, 1, 48,
-                              utils.RESTAURANT_ADDRESS);
+                utils.RESTAURANT_ADDRESS);
         printer.printTextWrap(4, 5, 1, 48, utils.RESTAURANT_PHONE);
     }
 
@@ -487,45 +525,112 @@ public class PrinterConnection {
      * @param printer the PrinterMatrix instance
      * @param counter the current counter position
      */
-    private void formatSummary(TableOrder order, boolean isTable,
+    private int formatSummary(TableOrder order, boolean isTable,
                                PrinterMatrix printer, int counter) {
         Locale chileLocale = Locale.forLanguageTag("es-CL");
         NumberFormat numberFormat = NumberFormat.getNumberInstance(chileLocale);
-        Integer total = order.getItemsSum() - order.getDiscount();
+
+        // 1. Cálculos base
+        Integer subTotal = order.getItemsSum();
+        Integer total = subTotal - order.getDiscount(); // Total con descuento manual
         String totalPlusTip = numberFormat.format(total + order.getTip());
 
+        // 2. Imprimir Bloque Estándar (Subtotal, Descuento Manual, Total)
         printer.printTextWrap(counter + 1, counter + 2, 27, 38, "SUBTOTAL");
         printer.printTextWrap(counter + 1, counter + 2, 39, 48,
-                              "$" + numberFormat.format(order.getItemsSum()));
+                "$" + numberFormat.format(subTotal));
+
         printer.printTextWrap(counter + 2, counter + 3, 27, 38, "DESCUENTO");
         printer.printTextWrap(counter + 2, counter + 3, 39, 48,
-                              "$" + numberFormat.format(order.getDiscount()));
-        printer.printTextWrap(counter + 3, counter + 4, 10, 48,
-                              "--------------------------------------");
-        printer.printTextWrap(counter + 4, counter + 5, 25, 38,
-                              "TOTAL A PAGAR");
-        printer.printTextWrap(counter + 4, counter + 5, 39, 48,
-                              "$" + numberFormat.format(total));
-        printer.printTextWrap(counter + 5, counter + 6, 10, 48,
-                              "--------------------------------------");
+                "$" + numberFormat.format(order.getDiscount()));
 
+        printer.printTextWrap(counter + 3, counter + 4, 10, 48,
+                "--------------------------------------");
+
+        printer.printTextWrap(counter + 4, counter + 5, 25, 38,
+                "TOTAL A PAGAR");
+        printer.printTextWrap(counter + 4, counter + 5, 39, 48,
+                "$" + numberFormat.format(total));
+
+        printer.printTextWrap(counter + 5, counter + 6, 10, 48,
+                "--------------------------------------");
+
+        int currentLine = counter + 6;
+
+        // 3. Imprimir Bloque Propina (Solo Mesas)
         if (isTable) {
-            printer.printTextWrap(counter + 6, counter + 7, 18, 38,
-                                  "10% PROPINA SUGERIDA");
-            printer.printTextWrap(counter + 6, counter + 7, 39, 48,
-                                  "$" + numberFormat.format(order.getTip()));
-            printer.printTextWrap(counter + 7, counter + 8, 10, 48,
-                                  "--------------------------------------");
-            printer.printTextWrap(counter + 8, counter + 9, 2, 38,
-                                  "TOTAL A PAGAR + 10% PROPINA SUGERIDA");
-            printer.printTextWrap(counter + 8, counter + 9, 39, 48,
-                                  "$" + totalPlusTip);
-            printer.printTextWrap(counter + 10, counter + 11, 13, 48,
-                                  "NO VALIDO COMO BOLETA");
-        } else {
-            printer.printTextWrap(counter + 6, counter + 10, 13, 48,
-                                  "NO VALIDO COMO BOLETA");
+            printer.printTextWrap(currentLine, currentLine + 1, 18, 38,
+                    "10% PROPINA SUGERIDA");
+            printer.printTextWrap(currentLine, currentLine + 1, 39, 48,
+                    "$" + numberFormat.format(order.getTip()));
+            currentLine++;
+
+            printer.printTextWrap(currentLine, currentLine + 1, 10, 48,
+                    "--------------------------------------");
+            currentLine++;
+
+            printer.printTextWrap(currentLine, currentLine + 1, 2, 38,
+                    "TOTAL A PAGAR + 10% PROPINA SUGERIDA");
+            printer.printTextWrap(currentLine, currentLine + 1, 39, 48,
+                    "$" + totalPlusTip);
+            currentLine += 2;
         }
+
+        // 4. --- LÓGICA ACTUALIZADA: PAGO EFECTIVO ---
+        if (subTotal > 20000 && !hasRestrictedItems(order)) {
+            int discountCash = (int) (subTotal * 0.05);
+            int totalCash;
+            String labelCash;
+
+            if (isTable) {
+                totalCash = (subTotal - discountCash) + order.getTip();
+                labelCash = "TOTAL EFECTIVO C/PROPINA";
+            } else {
+                totalCash = subTotal - discountCash;
+                labelCash = "TOTAL EFECTIVO";
+            }
+
+            // CAMBIO PRINCIPAL AQUÍ:
+            // 1. Definimos el texto largo
+            String disclaimer = "*** PAGO EFECTIVO (5% DCTO) VALIDO PARA COMPRAS SOBRE 20.000 CLP SIN COLACIONES Y PROMOCIONES ***";
+
+            // 2. Imprimimos usando 3 líneas de altura (currentLine + 3) para que quepa todo
+            printer.printTextWrap(currentLine, currentLine + 3, 1, 48, disclaimer);
+
+            // 3. Avanzamos 3 líneas el cursor para no sobrescribir
+            currentLine += 3;
+
+            // Imprimir Total Efectivo
+            int labelStart = (isTable) ? 5 : 15;
+            printer.printTextWrap(currentLine, currentLine + 1, labelStart, 38, labelCash);
+            printer.printTextWrap(currentLine, currentLine + 1, 39, 48, "$" + numberFormat.format(totalCash));
+
+            currentLine += 2;
+        }
+        // ---------------------------------------------
+
+        // 5. Mensaje Final
+        printer.printTextWrap(currentLine, currentLine + 1, 13, 48,
+                "NO VALIDO COMO BOLETA");
+
+
+        return currentLine;
+    }
+
+    /**
+     * Verifica si la orden contiene colaciones o menús basándose en el nombre.
+     */
+    private boolean hasRestrictedItems(TableOrder order) {
+        for (OrderItem item : order.getItems()) {
+            if (item.getName() != null) {
+                String name = item.getName().toUpperCase();
+                // Verificamos si el nombre contiene las palabras clave
+                if (name.contains("COLACIONES") || name.contains("PROMOCIONES")) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
 

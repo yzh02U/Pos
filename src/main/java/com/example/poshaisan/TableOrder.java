@@ -15,7 +15,7 @@ public class TableOrder {
 
     // Fields --------------------------------------------------
 
-    private final Integer id;
+    private Integer id;
     private final ObservableList<OrderItem> items;
     private final LocalDateTime startDateTime;
     private String server;
@@ -209,6 +209,13 @@ public class TableOrder {
                                               id);
             items.add(newItem);
         }
+    }
+
+
+
+    public void setId(Integer id) {
+        // Necesitas quitar el 'final' de la variable 'id' arriba
+        this.id = id;
     }
 
     /**

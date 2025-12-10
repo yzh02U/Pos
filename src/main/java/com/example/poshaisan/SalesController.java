@@ -116,15 +116,36 @@ public class SalesController {
      * Creates a TableOrder object and loads the "add-order" page in the
      * sidebar.
      */
-    public void loadOrder() {
+// En SalesController.java
 
+    // En SalesController.java
+
+    public void loadOrder() {
+        // 1. Crear el objeto
         TableOrder newOrder = createTakeoutOrder();
+
+        // 2. Generar el NOMBRE incremental (1001, 1002...) consultando la BD
+        AddOrderDAO dao = new AddOrderDAO(); // O usa la instancia que ya tengas
+        String nextTakeoutName = dao.generateNextTakeoutNumber();
+
+        newOrder.setTableName(nextTakeoutName);
+
+        // 3. Insertar en BD para obtener el ID Interno (Solución anterior)
         PrinterConnection print = new PrinterConnection();
-        List<Integer> takeoutsId = print.getNonTableOrders();
-        List<Integer> takeoutsId_command = print.getNonTableOrders_command();
-        newOrder.setTableName(String.valueOf(takeoutsId.size() + takeoutsId_command.size() + 1001));
-        takeouts.add(newOrder);
-        sidebar.loadPage("add-order", newOrder, false);
+        Integer realId = print.AddOrderToBD(newOrder, false); // false = Para Llevar
+
+        if (realId != -1) {
+            newOrder.setId(realId);
+
+            // OPCIONAL: Si quieres asegurar que el nombre quede guardado en BD
+            // por si AddOrderToBD no usó el nombre correcto al insertar:
+            print.UpdateOrderToBD(newOrder, false);
+
+            takeouts.add(newOrder);
+            sidebar.loadPage("add-order", newOrder, false);
+        } else {
+            System.out.println("Error crítico al crear orden en BD");
+        }
     }
 
 
@@ -315,14 +336,31 @@ public class SalesController {
         vbox.setOnMouseClicked(
                 event ->{
 
-                    TableOrder newOrder = createTableOrder();
+                    TableOrder newOrder = new TableOrder(0, FXCollections.observableArrayList(), utils.getDateTime());
                     newOrder.setTableName(name);
-                    tables.add(newOrder); // Add the new order to the tables list
-                    PrinterConnection print = new PrinterConnection();
-                    print.AddOrderToBD(newOrder, true);
-                    sidebar.loadPage("add-order", newOrder, true);
 
-                } );
+                    // 2. Añadimos a la lista visual
+                    tables.add(newOrder);
+
+                    // 3. INSERTAMOS EN BD Y OBTENEMOS EL ID REAL INMEDIATAMENTE
+                    PrinterConnection print = new PrinterConnection();
+                    Integer realId = print.AddOrderToBD(newOrder, true);
+
+                    // 4. ¡CRUCIAL! Sobreescribimos el ID temporal con el ID real de la BD
+                    if (realId != -1) {
+                        // Necesitas un método 'setId' en TableOrder. Si no existe, créalo,
+                        // o recrea el objeto TableOrder con el nuevo ID.
+                        // Asumiendo que TableOrder es inmutable en ID (según tu código parece serlo en el constructor),
+                        // Lo mejor es reemplazar el objeto en la lista o usar reflexión,
+                        // pero lo más limpio es añadir un setter en TableOrder.java: public void setId(Integer id) { this.id = id; }
+
+                        // Si no puedes añadir setters, recreamos el objeto:
+                        TableOrder realOrder = new TableOrder(realId, newOrder.getItems(), newOrder.getStartDate(), newOrder.getServer(), newOrder.getTableName());
+
+                        // Actualizamos la referencia para pasar a la siguiente pantalla
+                        sidebar.loadPage("add-order", realOrder, true);
+                    }
+                });
         vbox.setStyle("-fx-background-color: #4d79ff;");
         return vbox;
     }
@@ -445,6 +483,9 @@ public class SalesController {
 
 
     }
+
+
+
 
 
 

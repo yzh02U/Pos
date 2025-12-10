@@ -210,53 +210,37 @@ public class AddOrderController {
     /**
      * Navigates back to the sales page using the sidebar.
      */
+    // En AddOrderController.java
+
     public void goBack() {
+        // Validamos si el ID es válido (mayor a 0)
+        if (currentOrder.getId() != null && currentOrder.getId() > 0) {
 
-        List<StoredOrder> orders = printer.getOrders_command();
-        //System.out.println("la ultima id del pedido es " + orders.get(orders.size()-1).getId().toString());
-        boolean flag = true;
-        int count = orders.size();
-        while (flag && count > 0)
-        {
-            if(orders.get(count - 1).getId().equals(currentOrder.getId()))
-            {
-                System.out.println("la ultima id del pedido es " + orders.size());
-                System.out.println("la ultima id del pedido es " + orders.get(count-1).getId().toString());
-                System.out.println("la ultima id del pedido es " + currentOrder.getId().toString());
-                if (OrderLabel.getText().equals("Mesa")) {
-                    printer.UpdateOrderToBD(currentOrder, true);
-                }
-
-                if(OrderLabel.getText().equals("Llevar")) {
-                    printer.UpdateOrderToBD(currentOrder, false);
-                }
-
-                flag = false;
+            // Ya existe en BD, solo actualizamos los productos/total
+            if (OrderLabel.getText().equals("Mesa")) {
+                printer.UpdateOrderToBD(currentOrder, true);
+            } else { // Caso Para Llevar
+                printer.UpdateOrderToBD(currentOrder, false);
             }
-            count -= 1;
-        }
+            System.out.println("Orden actualizada correctamente. ID: " + currentOrder.getId());
 
-        if(flag) {
-
-
-            //System.out.println("la ultima id del pedido es " + orders.get(count-1).getId().toString());
-            System.out.println("la ultima id del pedido es " + currentOrder.getId().toString());
-
+        } else {
+            // Este bloque NO debería ejecutarse si aplicaste el cambio del paso 1,
+            // pero lo dejamos como seguridad.
+            Integer newId;
             if (OrderLabel.getText().equals("Llevar")) {
-                printer.AddOrderToBD(currentOrder, false);
+                newId = printer.AddOrderToBD(currentOrder, false);
+            } else {
+                newId = printer.AddOrderToBD(currentOrder, true);
             }
 
-            if (OrderLabel.getText().equals("Mesa")){
-
-                printer.AddOrderToBD(currentOrder, true);
-            }
-
-            System.out.println("Se creo una orden");
+            // IMPORTANTE: Si entramos aquí, debemos actualizar el ID del objeto en memoria
+            // para que la próxima vez no cree otro duplicado.
+            // currentOrder.setId(newId);
+            System.out.println("Orden nueva creada al salir. ID: " + newId);
         }
-
 
         sidebar.loadPage("sales", null, false);
-        //printer.AddOrderToBD(currentOrder, false);
     }
 
     /**

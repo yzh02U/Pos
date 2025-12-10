@@ -5,6 +5,9 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.io.IOException;
 import java.time.*;
+import java.io.FileInputStream;
+import java.io.InputStream;
+import java.util.Properties;
 import java.util.Arrays;
 import java.util.List;
 
@@ -17,54 +20,57 @@ public class Utils {
 
 
     private final List<String> DISH_TYPES = Arrays.asList(
-            "APERITIVOS",
-            "ARROZ",
-            "PESCADOS Y MARISCOS",
-            "BEBIDAS",
-            "OTROS",
-            "CHAPSUI",
-            "COLACIONES",
-            "ENTRADAS",
-            "ESPECIALES",
-            "FIDEOS",
-            "FIDEOS DE ARROZ",
-            "MENÚS",
-            "PARRILLADAS",
-            "POLLOS",
-            "SOPAS",
-            "VACUNO Y CERDO",
-            "POSTRES",
-            "VINOS",
-            "CERVEZAS",
-            "CAMBIOS",
-            "SALSAS",
-            "PROMOCIONES",
-            "APERITIVOS BEBIBLES",
-            "PISCOLAS",
-            "BAJATIVOS",
-            "WHISKYS",
-            "CAFE Y TE",
-            "VINOS"
+            "APERITIVOS", "ARROZ", "PESCADOS Y MARISCOS", "BEBIDAS", "OTROS",
+            "CHAPSUI", "COLACIONES", "ENTRADAS", "ESPECIALES", "FIDEOS",
+            "FIDEOS DE ARROZ", "MENÚS", "PARRILLADAS", "POLLOS", "SOPAS",
+            "VACUNO Y CERDO", "POSTRES", "VINOS", "CERVEZAS", "CAMBIOS",
+            "SALSAS", "PROMOCIONES", "APERITIVOS BEBIBLES", "PISCOLAS",
+            "BAJATIVOS", "WHISKYS", "CAFE Y TE"
     );
 
     private final List<String> SERVERS = Arrays.asList(
-            "ELENA J.",
-            "MARCIA F.",
-            "VERONICA R.",
-            "FELIPE",
-            "RUBEN"
+            "ELENA J.", "MARCIA F.", "VERONICA R.", "FELIPE", "RUBEN"
     );
 
-    public final String DB_URL = "jdbc:mysql://localhost:3306/pos";
-    public final String DB_USER = "root";
-    public final String DB_PASSWORD = "3812";
+    // DATOS DE CONEXIÓN (Ya no son final, se cargan dinámicamente)
+    public String DB_URL;
+    public String DB_USER;
+    public String DB_PASSWORD;
 
+    // Constantes del Restaurante
     public final String RESTAURANT_NAME = "CHINA HOUSE";
     public final String RESTAURANT_ADDRESS = "VEINTIUNO DE MAYO, 977, Talagante";
     public final String RESTAURANT_PHONE  = "(2) 28145093";
     public final String RESTAURANT_RUT = "76.764.184-2";
 
+    public Utils() {
+        loadDatabaseConfig();
+    }
     // Methods ------------------------------------------------
+
+    public void loadDatabaseConfig() {
+        Properties prop = new Properties();
+        try (InputStream input = new FileInputStream("config.properties")) {
+            prop.load(input);
+
+            String ip = prop.getProperty("db.ip", "localhost");
+            String port = prop.getProperty("db.port", "3306");
+            String dbName = prop.getProperty("db.name", "pos");
+
+            // Construimos la URL completa
+            this.DB_URL = "jdbc:mysql://" + ip + ":" + port + "/" + dbName;
+            this.DB_USER = prop.getProperty("db.user", "root");
+            this.DB_PASSWORD = prop.getProperty("db.password", "3812");
+
+        } catch (IOException ex) {
+            // Configuración por defecto si falla la lectura
+            System.out.println("No se encontró configuración, usando Localhost.");
+            this.DB_URL = "jdbc:mysql://localhost:3306/pos";
+            this.DB_USER = "root";
+            this.DB_PASSWORD = "3812";
+        }
+    }
+
 
     /**
      * Retrieves the list of dish types.

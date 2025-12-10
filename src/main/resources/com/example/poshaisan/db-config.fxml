@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<?import javafx.scene.control.*?>
+<?import javafx.scene.layout.*?>
+<?import javafx.geometry.Insets?>
+
+<VBox alignment="CENTER" spacing="10" xmlns="http://javafx.com/javafx"
+      xmlns:fx="http://javafx.com/fxml"
+      fx:controller="com.example.poshaisan.DbConfigController"
+      prefWidth="300" prefHeight="350">
+
+    <padding><Insets top="20" right="20" bottom="20" left="20"/></padding>
+
+    <Label text="Configuración de Base de Datos" style="-fx-font-weight: bold; -fx-font-size: 14px;"/>
+
+    <TextField fx:id="ipField" promptText="Dirección IP (ej: 192.168.1.100)"/>
+    <TextField fx:id="portField" promptText="Puerto (ej: 3306)"/>
+    <TextField fx:id="dbNameField" promptText="Nombre BD (ej: pos)"/>
+    <TextField fx:id="userField" promptText="Usuario BD"/>
+    <PasswordField fx:id="passField" promptText="Contraseña BD"/>
+
+    <HBox spacing="10" alignment="CENTER">
+        <Button fx:id="saveBtn" text="Guardar" onAction="#saveConfiguration"
+                style="-fx-background-color: #4CAF50; -fx-text-fill: white;"/>
+        <Button fx:id="cancelBtn" text="Cancelar" onAction="#closeWindow"/>
+    </HBox>
+</VBox>

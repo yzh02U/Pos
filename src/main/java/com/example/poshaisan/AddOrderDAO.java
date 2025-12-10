@@ -175,10 +175,12 @@ public class AddOrderDAO {
     }
 
 
-    public void UpdateOrderInDatabase(TableOrder order, Boolean isTable,
-                                      LocalDateTime endDateTime) {
+    // 2. Modificamos el Update para que busque por ID (WHERE id = ?) y no por nombre
+    public void UpdateOrderInDatabase(TableOrder order, Boolean isTable, LocalDateTime endDateTime) {
+        // CAMBIO IMPORTANTE: WHERE id = ? en lugar de WHERE name = ?
         String query = "UPDATE command SET isTable = ?, products = ?, server = ?, " +
-                "startDateTime = ?, endDateTime = ?, total = ?  WHERE name = ?";
+                "startDateTime = ?, endDateTime = ?, total = ?, name = ? WHERE id = ?";
+
         Timestamp formattedStartDateTime = Timestamp.valueOf(order.getStartDate());
         Timestamp formattedEndDateTime = Timestamp.valueOf(endDateTime);
         int totalPrice = order.getItemsSum() - order.getDiscount();
@@ -186,7 +188,6 @@ public class AddOrderDAO {
         try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
              PreparedStatement preparedStatement = connection.prepareStatement(query)) {
 
-            // Set the parameters for the prepared statement
             preparedStatement.setBoolean(1, isTable);
             preparedStatement.setString(2, order.itemsToJson());
             preparedStatement.setString(3, order.getServer());
@@ -194,22 +195,17 @@ public class AddOrderDAO {
             preparedStatement.setTimestamp(5, formattedEndDateTime);
             preparedStatement.setInt(6, totalPrice);
             preparedStatement.setString(7, order.getTableName());
+            preparedStatement.setInt(8, order.getId()); // <--- Usamos el ID para identificar la fila
 
-            // Execute the update query
             int rowsUpdated = preparedStatement.executeUpdate();
-
             if (rowsUpdated > 0) {
-                logger.info("Order updated successfully in the database.");
+                logger.info("Order updated successfully (ID: " + order.getId() + ")");
             } else {
-                logger.warning("No order found with the specified name: " + order.getTableName());
+                logger.warning("No order found with ID: " + order.getId());
             }
 
-        } catch (SQLException e) {
-            logger.severe("Error while updating order in database");
-            logger.severe(e.toString());
-        } catch (JsonProcessingException e) {
-            logger.severe("Error while processing order items to JSON");
-            logger.severe(e.toString());
+        } catch (SQLException | JsonProcessingException e) {
+            logger.severe("Error updating order: " + e.toString());
         }
     }
 
@@ -225,21 +221,19 @@ public class AddOrderDAO {
      */
 
     //Agrega la orden en command
-    public void addOrderToDatabase_Command(TableOrder order, Boolean isTable,
-                                   LocalDateTime endDateTime) {
+    public Integer addOrderToDatabase_Command(TableOrder order, Boolean isTable, LocalDateTime endDateTime) {
         String query = "INSERT INTO command (isTable, products, server, " +
-                "startDateTime, endDateTime, total, name) VALUES (?, " +
-                "?, ?, " +
-                "?, ?, ?, ?)";
-        Timestamp formattedStartDateTime = Timestamp.valueOf(
-                order.getStartDate());
+                "startDateTime, endDateTime, total, name) VALUES (?, ?, ?, ?, ?, ?, ?)";
+
+        // ... conversión de fechas ...
+        Timestamp formattedStartDateTime = Timestamp.valueOf(order.getStartDate());
         Timestamp formattedEndDateTime = Timestamp.valueOf(endDateTime);
         int totalPrice = order.getItemsSum() - order.getDiscount();
 
-        try (Connection connection = Database.getConnection(URL, USER,
-                PASSWORD);
-             PreparedStatement preparedStatement = connection.prepareStatement(
-                     query)) {
+        // Necesitamos RETURN_GENERATED_KEYS para obtener el ID real
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD);
+             PreparedStatement preparedStatement = connection.prepareStatement(query, Statement.RETURN_GENERATED_KEYS)) {
+
             preparedStatement.setBoolean(1, isTable);
             preparedStatement.setString(2, order.itemsToJson());
             preparedStatement.setString(3, order.getServer());
@@ -247,17 +241,22 @@ public class AddOrderDAO {
             preparedStatement.setTimestamp(5, formattedEndDateTime);
             preparedStatement.setInt(6, totalPrice);
             preparedStatement.setString(7, order.getTableName());
-            preparedStatement.executeUpdate();
 
-            logger.severe("Orden Creada");
+            int affectedRows = preparedStatement.executeUpdate();
 
-        } catch (SQLException e) {
-            logger.severe("Error while adding order to database");
-            logger.severe(e.toString());
-        } catch (JsonProcessingException e) {
-            logger.severe("Error while processing order items to JSON");
-            logger.severe(e.toString());
+            if (affectedRows > 0) {
+                try (ResultSet generatedKeys = preparedStatement.getGeneratedKeys()) {
+                    if (generatedKeys.next()) {
+                        int newId = generatedKeys.getInt(1);
+                        logger.info("Orden creada con ID real de BD: " + newId);
+                        return newId; // <--- RETORNAMOS EL ID REAL
+                    }
+                }
+            }
+        } catch (SQLException | JsonProcessingException e) {
+            logger.severe("Error agregando orden a command: " + e.toString());
         }
+        return -1; // Retorno de error
     }
 
 
@@ -559,5 +558,52 @@ public class AddOrderDAO {
     }
 
 
+
+    // En AddOrderDAO.java
+
+    public String generateNextTakeoutNumber() {
+        int maxNumber = 999; // Base inicial para que el primero sea 1000+1
+
+        // 1. Consultar en órdenes activas (command)
+        String queryCommand = "SELECT name FROM command WHERE isTable = 0";
+        // 2. Consultar en historial del día (orders) - Asumiendo que limpias la tabla a diario o filtras por fecha
+        // Si no limpias 'orders' a diario, deberías agregar " AND startDateTime >= CURDATE()"
+        String queryHistory = "SELECT name FROM orders WHERE isTable = 0";
+
+        try (Connection connection = Database.getConnection(URL, USER, PASSWORD)) {
+
+            // Revisar Command
+            try (PreparedStatement stmt = connection.prepareStatement(queryCommand);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    maxNumber = Math.max(maxNumber, parseNameToInt(rs.getString("name")));
+                }
+            }
+
+            // Revisar History (Orders)
+            // Nota: Agrega filtro de fecha si tu tabla 'orders' guarda historial de meses pasados
+            try (PreparedStatement stmt = connection.prepareStatement(queryHistory);
+                 ResultSet rs = stmt.executeQuery()) {
+                while (rs.next()) {
+                    maxNumber = Math.max(maxNumber, parseNameToInt(rs.getString("name")));
+                }
+            }
+
+        } catch (SQLException e) {
+            logger.severe("Error generando número para llevar: " + e.getMessage());
+        }
+
+        return String.valueOf(maxNumber + 1);
+    }
+
+    // Método auxiliar para evitar errores si el nombre no es numérico
+    private int parseNameToInt(String name) {
+        try {
+            if (name == null) return 0;
+            return Integer.parseInt(name);
+        } catch (NumberFormatException e) {
+            return 0; // Si hay un nombre raro como "VIP", lo ignoramos
+        }
+    }
 
 }
