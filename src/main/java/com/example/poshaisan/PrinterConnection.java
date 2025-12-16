@@ -16,6 +16,8 @@ import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Locale;
 import java.util.logging.Logger;
+import javax.print.PrintService;
+import javax.print.PrintServiceLookup;
 
 /**
  * Class for handling printer connections and formatting orders for printing.
@@ -33,76 +35,132 @@ public class PrinterConnection {
 
     // Methods --------------------------------------------------------
 
-    public void printDailySummary(List<StoredOrder> ordersList) throws PrinterException{
+    public void printDailySummary(List<StoredOrder> ordersList) throws PrinterException {
         PrinterMatrix printer = new PrinterMatrix();
         FileInputStream inputStream = null;
         LocalDate today = utils.getDateTime().toLocalDate();
-        int voucherSize = (ordersList.size() * 2) + 28;
-        int toPrintCol = 12;
-        int ordersCounter = 0;
-        StoredOrder lastItem = null;
-        if (!ordersList.isEmpty()){
-            lastItem = ordersList.getLast();
-        }
 
-        printer.setOutSize(voucherSize, 48);
-        printer.printTextWrap(1, 2, 10, 48,
-                              " - " + "RESTAURANT "+ utils.RESTAURANT_NAME.toUpperCase() +
-                                      " -" +
-                                      " ");
-        printer.printTextWrap(4,5,10,48, "RUT: "+ utils.RESTAURANT_RUT );
-        printer.printTextWrap(5,6, 10,48, "TEL: "+utils.RESTAURANT_PHONE);
-        printer.printTextWrap(7,8,10,48,
-                              "TICKET DETALLE: " + today);
-        printer.printTextWrap(9,10,0,48,
-                              "=============================================");
+        // --- 1. CÁLCULO PRECISO DEL TAMAÑO DE PAPEL ---
+        // Encabezado compacto: Título, Datos, Columnas y Separador = 6 líneas aprox.
+        int headerLines = 6;
 
-        printer.printTextWrap(10,11,0, 5, "GARZON");
-        printer.printTextWrap(10,11, 10, 14, "MESA");
-        printer.printTextWrap(10,11, 20, 30, "ID MESA");
-        printer.printTextWrap(10,11,35, 48, "MONTO");
+        // Cuerpo: Cada orden ocupa 1 línea de datos + 1 línea de separador.
+        int bodyLines = ordersList.size() * 2;
 
-        printer.printTextWrap(11,12,0, 5, "=====");
-        printer.printTextWrap(11,12, 10, 14, "====");
-        printer.printTextWrap(11,12, 20, 30, "=======");
-        printer.printTextWrap(11,12,35, 48, "==========");
+        // Footer: Totales (Mesas, Llevar, Separador, Total Final, Separador) = 5 líneas.
+        int footerLines = 5;
 
+        // Avance para corte (Feed)
+        int feedLines = 4;
 
-        for(StoredOrder order : ordersList){
-            printer.printTextWrap(toPrintCol, toPrintCol+1, 0, 5,
-                                  order.getServer() );
-            printer.printTextWrap(toPrintCol, toPrintCol+1, 10, 14,
-                                  order.getIsTable() ? "SI" : "NO");
-            printer.printTextWrap(toPrintCol, toPrintCol+1, 20, 30,
-                                  order.getTableName());
-            printer.printTextWrap(toPrintCol, toPrintCol+1, 35, 48,
-                                  "$" + numberFormat.format(order.getTotal()));
-            if (order.equals(lastItem)){
-                printer.printTextWrap(toPrintCol+1, toPrintCol+2,0,48,"==============================================");
+        // Altura Total Exacta
+        int totalHeight = headerLines + bodyLines + footerLines + feedLines + 1;
 
+        printer.setOutSize(totalHeight, 48);
+
+        // --- 2. IMPRESIÓN ENCABEZADO (Secuencial sin huecos) ---
+        int currentLine = 0;
+
+        // L1: Título Centrado (aprox)
+        printer.printTextWrap(currentLine, currentLine + 1, 5, 48,
+                "RESUMEN DIARIO - " + utils.RESTAURANT_NAME);
+        currentLine++;
+
+        // L2: RUT y Teléfono en una línea
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48,
+                "RUT:" + utils.RESTAURANT_RUT + " TEL:" + utils.RESTAURANT_PHONE);
+        currentLine++;
+
+        // L3: Fecha
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48,
+                "FECHA RESUMEN: " + today);
+        currentLine++;
+
+        // L4: Separador y Títulos de Columnas
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48,
+                "================================================");
+        currentLine++;
+
+        // L5: Cabeceras de Tabla
+        printer.printTextWrap(currentLine, currentLine + 1, 0, 7, "GARZON");
+        printer.printTextWrap(currentLine, currentLine + 1, 9, 13, "MESA"); // "SI/NO"
+        printer.printTextWrap(currentLine, currentLine + 1, 15, 30, "ID MESA");
+        printer.printTextWrap(currentLine, currentLine + 1, 35, 48, "MONTO");
+        currentLine++;
+
+        // L6: Separador simple
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48,
+                "------------------------------------------------");
+        currentLine++;
+
+        // --- 3. IMPRESIÓN DE LA LISTA DE ÓRDENES ---
+        StoredOrder lastItem = (!ordersList.isEmpty()) ? ordersList.get(ordersList.size() - 1) : null;
+
+        for (StoredOrder order : ordersList) {
+            // Imprimir Datos
+            printer.printTextWrap(currentLine, currentLine + 1, 0, 7,
+                    order.getServer());
+            printer.printTextWrap(currentLine, currentLine + 1, 9, 13,
+                    order.getIsTable() ? "SI" : "NO");
+            printer.printTextWrap(currentLine, currentLine + 1, 15, 30,
+                    order.getTableName());
+            printer.printTextWrap(currentLine, currentLine + 1, 35, 48,
+                    "$" + numberFormat.format(order.getTotal()));
+            currentLine++;
+
+            // Imprimir Separador (Doble si es el último, simple si no)
+            if (order.equals(lastItem)) {
+                printer.printTextWrap(currentLine, currentLine + 1, 1, 48,
+                        "================================================");
             } else {
-                printer.printTextWrap(toPrintCol+1, toPrintCol+2,0,48,"----------------------------------------------");
+                printer.printTextWrap(currentLine, currentLine + 1, 1, 48,
+                        "------------------------------------------------");
             }
-            toPrintCol+=2;
-            ordersCounter += 1;
+            currentLine++;
         }
-        printer.printTextWrap(toPrintCol, toPrintCol+1, 15, 30, "MESAS: ");
-        printer.printTextWrap(toPrintCol, toPrintCol+1, 35, 48,
-                              "$"+numberFormat.format(getTotalTables(ordersList)));
-        printer.printTextWrap(toPrintCol+1, toPrintCol+2, 15, 30, "PARA " +
-                "LLEVAR: ");
-        printer.printTextWrap(toPrintCol+1, toPrintCol+2, 35, 48,
-                              "$"+numberFormat.format(getTotalTakeout(ordersList)));
 
-        printer.printTextWrap(toPrintCol+2, toPrintCol+3, 0,48,
-                              "==============================================" );
+        // --- 4. IMPRESIÓN DE TOTALES (FOOTER) ---
+        // Total Mesas
+        printer.printTextWrap(currentLine, currentLine + 1, 15, 30, "MESAS:");
+        printer.printTextWrap(currentLine, currentLine + 1, 35, 48,
+                "$" + numberFormat.format(getTotalTables(ordersList)));
+        currentLine++;
 
-        printer.printTextWrap(toPrintCol+3, toPrintCol+4, 15, 30, "TOTAL: ");
-        printer.printTextWrap(toPrintCol+3, toPrintCol+4, 35, 48,
-                              "$"+numberFormat.format(getTotalTakeout(ordersList)+getTotalTables(ordersList)));
-        printer.printTextWrap(toPrintCol+4, toPrintCol+5, 0,48,
-                              "==============================================" );
+        // Total Llevar
+        printer.printTextWrap(currentLine, currentLine + 1, 15, 30, "PARA LLEVAR:");
+        printer.printTextWrap(currentLine, currentLine + 1, 35, 48,
+                "$" + numberFormat.format(getTotalTakeout(ordersList)));
+        currentLine++;
 
+        // Separador
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48,
+                "================================================");
+        currentLine++;
+
+        // GRAN TOTAL
+        long granTotal = getTotalTakeout(ordersList) + getTotalTables(ordersList);
+        printer.printTextWrap(currentLine, currentLine + 1, 15, 30, "TOTAL DIA:");
+        printer.printTextWrap(currentLine, currentLine + 1, 35, 48,
+                "$" + numberFormat.format(granTotal));
+        currentLine++;
+
+        // Cierre visual
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48,
+                "================================================");
+        currentLine++;
+
+        // --- 5. AVANCE DE PAPEL (FEED) ---
+        // Esto es lo que faltaba para que no cortes sobre el texto
+        for (int i = 0; i < feedLines; i++) {
+            printer.printTextWrap(currentLine, currentLine + 1, 1, 48, "");
+            currentLine++;
+        }
+
+        // --- 6. CORTE ---
+        String PAPER_CUT = "\u001B\u0069";
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, PAPER_CUT);
+
+        // --- PROCESO DE ENVÍO A LA IMPRESORA ---
         printer.toFile("impresionTotal.txt");
 
         try {
@@ -114,10 +172,8 @@ public class PrinterConnection {
 
         DocFlavor docFormat = DocFlavor.INPUT_STREAM.AUTOSENSE;
         Doc document = new SimpleDoc(inputStream, docFormat, null);
-        PrintRequestAttributeSet attributeSet =
-                new HashPrintRequestAttributeSet();
-        PrintService printService =
-                PrintServiceLookup.lookupDefaultPrintService();
+        PrintRequestAttributeSet attributeSet = new HashPrintRequestAttributeSet();
+        PrintService printService = PrintServiceLookup.lookupDefaultPrintService();
 
         if (printService == null) {
             logger.severe("No printer found");
@@ -136,49 +192,55 @@ public class PrinterConnection {
 
     /**
      * Prints the order to a file and sends it to the printer.
-     *
-     * @param order   the TableOrder object containing order details
-     * @param isTable boolean indicating if the order is for a table
-     * @throws PrinterException if there is an error during printing
      */
-    public void printOrder(TableOrder order,
-                           boolean isTable, boolean isCopy) throws PrinterException {
+    public void printOrder(TableOrder order, boolean isTable, boolean isCopy) throws PrinterException {
         PrinterMatrix printer = new PrinterMatrix();
         FileInputStream inputStream = null;
 
-        // 1. AUMENTAMOS EL TAMAÑO (+ 5 líneas extra para asegurar espacio para el corte)
-        int voucherSize = (isTable) ?
-                order.getItems().size() + 50 : order.getItems().size() + 46;
+        // --- 1. CÁLCULO PRECISO DEL TAMAÑO DE PAPEL ---
+        // Header + Detalles fijos ocupan exactamente hasta la línea 14.
+        int baseHeaderLines = 14;
+        int itemLines = order.getItems().size();
 
-        printer.setOutSize(voucherSize, 48);
+        // El resumen varía: Si es mesa incluye propina (aprox 10 líneas), si no, es más corto (aprox 6).
+        // Le damos un margen de seguridad de +2 líneas por si acaso.
+        int summaryLines = isTable ? 12 : 8;
 
+        int feedLines = 4; // Avance para que pase la cuchilla
+
+        // Tamaño total = Base + Productos + Resumen + Avance + Margen error
+        int totalHeight = baseHeaderLines + itemLines + summaryLines + feedLines + 1;
+
+        printer.setOutSize(totalHeight, 48);
+
+        // --- 2. IMPRESIÓN DEL CONTENIDO ---
         printHeader(printer);
         formatDate(printer);
         formatTime(printer);
         printOrderDetails(printer, order);
+
+        // formatOrderItems devuelve la línea donde quedó (generalmente 14 + n_items)
         int counter = formatOrderItems(order.getItems(), printer);
 
-
-        // CAMBIO AQUÍ: Capturamos la última línea real
+        // formatSummary imprime totales y devuelve la ULTIMA línea escrita
         int lastLine = formatSummary(order, isTable, printer, counter);
 
+        // --- 3. AVANCE DE PAPEL (FEED) ---
+        // Importante: Empezamos a avanzar DESPUÉS de la última línea del resumen
+        int currentLine = lastLine + 1;
 
-        // formatSummary imprime el total.
-        formatSummary(order, isTable, printer, counter);
+        for (int i = 0; i < feedLines; i++) {
+            printer.printTextWrap(currentLine, currentLine + 1, 1, 48, "");
+            currentLine++;
+        }
 
-        // 2. AGREGAMOS EL COMANDO DE CORTE
-        // Calculamos dónde terminó de escribir formatSummary.
-        // formatSummary ocupa unas 11 líneas después del 'counter'.
-        int cutPosition = lastLine + 2;
-
-        // COMANDO: \u001B\u0064\u0003 (Avanzar 3 líneas) + \u001B\u0069 (Cortar papel)
-        String PAPER_CUT = "\u001B\u0064\u0003" + "\u001B\u0069";
-
-        printer.printTextWrap(cutPosition, cutPosition + 1, 1, 48, PAPER_CUT);
+        // --- 4. CORTE ---
+        String PAPER_CUT = "\u001B\u0069";
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, PAPER_CUT);
 
         printer.toFile("impresion.txt");
 
-
+        // --- BLOQUE DE ENVÍO A IMPRESORA (Sin cambios) ---
         try {
             inputStream = new FileInputStream("impresion.txt");
         } catch (FileNotFoundException e) {
@@ -188,10 +250,8 @@ public class PrinterConnection {
 
         DocFlavor docFormat = DocFlavor.INPUT_STREAM.AUTOSENSE;
         Doc document = new SimpleDoc(inputStream, docFormat, null);
-        PrintRequestAttributeSet attributeSet =
-                new HashPrintRequestAttributeSet();
-        PrintService printService =
-                PrintServiceLookup.lookupDefaultPrintService();
+        PrintRequestAttributeSet attributeSet = new HashPrintRequestAttributeSet();
+        PrintService printService = PrintServiceLookup.lookupDefaultPrintService();
 
         if (printService == null) {
             logger.severe("No printer found");
@@ -202,10 +262,10 @@ public class PrinterConnection {
 
         try {
             printJob.print(document, attributeSet);
+            // Solo guardamos en BD si no es copia
             if (!isCopy){
                 orderDAO.addOrderToDatabase(order, isTable, utils.getDateTime());
                 orderDAO.deleteOrderFromDatabase_Command(order.getTableName());
-
             }
         } catch (PrintException e) {
             logger.severe("Printing failed: " + e.getMessage());
@@ -214,129 +274,45 @@ public class PrinterConnection {
     }
 
 
-    public void printDetail(TableOrder order,
-                           boolean isTable, boolean isCopy) throws PrinterException {
+    public void printDetail(TableOrder order, boolean isTable, boolean isCopy) throws PrinterException {
         PrinterMatrix printer = new PrinterMatrix();
         FileInputStream inputStream = null;
-        int voucherSize = (isTable) ?
-                order.getItems().size() + 35 : order.getItems().size() + 31;
 
-        printer.setOutSize(voucherSize, 48);
+        // --- 1. CÁLCULO PRECISO (Misma lógica que printOrder) ---
+        int baseHeaderLines = 14;
+        int itemLines = order.getItems().size();
 
+        // Aquí isTable suele ser false para 'Llevar', pero mantenemos la lógica dinámica
+        int summaryLines = isTable ? 12 : 8;
+        int feedLines = 4;
+
+        int totalHeight = baseHeaderLines + itemLines + summaryLines + feedLines + 1;
+
+        printer.setOutSize(totalHeight, 48);
+
+        // --- 2. IMPRESIÓN ---
         printHeader(printer);
         formatDate(printer);
         formatTime(printer);
         printOrderDetails(printer, order);
+
         int counter = formatOrderItems(order.getItems(), printer);
-        formatSummary(order, isTable, printer, counter);
+        int lastLine = formatSummary(order, isTable, printer, counter);
 
-        // 2. AGREGAMOS EL CORTE
-        int cutPosition = counter + 13;
-        String PAPER_CUT = "\u001B\u0064\u0003" + "\u001B\u0069";
-        printer.printTextWrap(cutPosition, cutPosition + 1, 1, 48, PAPER_CUT);
+        // --- 3. AVANCE DE PAPEL (FEED) ---
+        int currentLine = lastLine + 1;
+        for (int i = 0; i < feedLines; i++) {
+            printer.printTextWrap(currentLine, currentLine + 1, 1, 48, "");
+            currentLine++;
+        }
+
+        // --- 4. CORTE ---
+        String PAPER_CUT = "\u001B\u0069";
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, PAPER_CUT);
 
         printer.toFile("impresion.txt");
 
-        try {
-            inputStream = new FileInputStream("impresion.txt");
-        } catch (FileNotFoundException e) {
-            logger.severe("File not found: " + e.getMessage());
-            throw new PrinterException("File not found");
-        }
-
-        DocFlavor docFormat = DocFlavor.INPUT_STREAM.AUTOSENSE;
-        Doc document = new SimpleDoc(inputStream, docFormat, null);
-        PrintRequestAttributeSet attributeSet =
-                new HashPrintRequestAttributeSet();
-        PrintService printService =
-                PrintServiceLookup.lookupDefaultPrintService();
-
-        if (printService == null) {
-            logger.severe("No printer found");
-            throw new PrinterException("No printer found");
-        }
-
-        DocPrintJob printJob = printService.createPrintJob();
-
-        try {
-            printJob.print(document, attributeSet);
-
-        } catch (PrintException e) {
-            logger.severe("Printing failed: " + e.getMessage());
-            throw new PrinterException("Printing failed");
-        }
-    }
-
-    // Se agregan mesas a la BD
-    public void Add_to_BD(TableOrder order, Boolean isTable){
-
-        orderDAO.addOrderToDatabase(order, isTable, utils.getDateTime());
-        orderDAO.deleteOrderFromDatabase_Command(order.getTableName());
-       
-    }
-
-    public List<Integer> getNonTableOrders(){
-
-        return orderDAO.getNonTableOrdersFromDatabase();
-    }
-
-    public List<Integer> getNonTableOrders_command(){
-
-        return orderDAO.getNonTableOrdersFromDatabase_Command();
-    }
-
-    public void Delete_from_BD(TableOrder order){
-
-        orderDAO.deleteOrderFromDatabase_Command(order.getTableName());
-    }
-
-    public Integer Get_Latest_id_from_Command(){
-
-       return  orderDAO.getLastOrderIdFromDatabase_Command();
-    }
-
-    public void printCommand(TableOrder order, boolean isTable) throws PrinterException {
-        PrinterMatrix printer = new PrinterMatrix();
-        FileInputStream inputStream = null;
-
-        // Ajuste del tamaño del ticket basado en la cantidad de productos
-        int voucherSize = Math.max(order.getItems().size() + 10, 20); // Evita que el ticket sea demasiado corto
-        printer.setOutSize(voucherSize, 48);
-
-        // Imprimir fecha y hora
-        String formattedDate = LocalDate.now().format(DateTimeFormatter.ofPattern("dd/MM/yyyy"));
-        printer.printTextWrap(1, 2, 1, 19, "FECHA  : " + formattedDate);
-
-        String formattedTime = LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm"));
-        printer.printTextWrap(1, 2, 25, 48, "Hora : " + formattedTime);
-
-        // Imprimir detalles básicos (mesa y cajero)
-        printer.printTextWrap(2, 3, 1, 10, "MESA   :");
-        printer.printTextWrap(2, 3, 11, 48, order.getTableName());
-        printer.printTextWrap(3, 4, 1, 10, "CAJERO :");
-        printer.printTextWrap(3, 4, 11, 48, order.getServer());
-
-        // Imprimir título de productos en tamaño doble
-        printer.printTextWrap(5, 6, 1, 48, "\u001D\u0021\u0011" + "PRODUCTOS PARA COCINA" + "\u001D\u0021\u0000");
-
-        // Formatear productos con tamaño doble
-        int lastPrintedLine = formatOrderItemsBigger(order.getItems(), printer);
-
-        // Línea divisoria final antes del corte
-        lastPrintedLine++;
-        printer.printTextWrap(lastPrintedLine, lastPrintedLine + 1, 1, 35, "--------------------");
-
-        // Asegurar que el corte esté después de la última línea
-        lastPrintedLine += 2;
-        printer.printTextWrap(lastPrintedLine, lastPrintedLine, 1, 35, "\u001B\u0069");
-
-
-        int finalLine = lastPrintedLine + 1;
-        printer.printTextWrap(finalLine, finalLine, 1, 1, "\u001D\u0021\u0000"); // Asegurar normalidad
-
-        // Guardar en archivo antes de imprimir
-        printer.toFile("impresion.txt");
-
+        // --- ENVÍO A IMPRESORA ---
         try {
             inputStream = new FileInputStream("impresion.txt");
         } catch (FileNotFoundException e) {
@@ -364,22 +340,131 @@ public class PrinterConnection {
         }
     }
 
+    // Se agregan mesas a la BD
+    public void Add_to_BD(TableOrder order, Boolean isTable){
+        orderDAO.addOrderToDatabase(order, isTable, utils.getDateTime());
+        orderDAO.deleteOrderFromDatabase_Command(order.getTableName());
+    }
 
+    public List<Integer> getNonTableOrders(){
+        return orderDAO.getNonTableOrdersFromDatabase();
+    }
+
+    public List<Integer> getNonTableOrders_command(){
+        return orderDAO.getNonTableOrdersFromDatabase_Command();
+    }
+
+    public void Delete_from_BD(TableOrder order){
+        orderDAO.deleteOrderFromDatabase_Command(order.getTableName());
+    }
+
+    public Integer Get_Latest_id_from_Command(){
+        return  orderDAO.getLastOrderIdFromDatabase_Command();
+    }
+
+    public void printCommand(TableOrder order, boolean isTable) throws PrinterException {
+        PrinterMatrix printer = new PrinterMatrix();
+        FileInputStream inputStream = null;
+
+        // --- CONFIGURACIÓN DE ESPACIO ---
+        // Calculamos el tamaño EXACTO para evitar residuo de papel extra.
+        // Encabezado (4 líneas) + Items (N líneas) + Cierre (1 línea) +
+        // AVANCE FISICO (4 líneas para llegar a la cuchilla) + Corte (1 línea).
+        int headerLines = 4;
+        int itemsSize = order.getItems().size();
+        int footerLines = 1;
+        int feedLines = 4; // 4 líneas suelen ser aprox 1.5cm, suficiente para pasar el cabezal.
+
+        int totalLines = headerLines + itemsSize + footerLines + feedLines + 1;
+
+        printer.setOutSize(totalLines, 48);
+
+        // COMANDOS DE CONTROL
+        String RESET = "\u001B\u0040";
+        String BIG_TEXT = "\u001D\u0021\u0011";
+        String NORMAL_TEXT = "\u001D\u0021\u0000";
+
+        // --- 1. ENCABEZADO (Líneas 0 a 3) ---
+        int currentLine = 0;
+
+        String tituloMesa = isTable ? "COCINA - MESA: " + order.getTableName() : "COCINA - PARA LLEVAR";
+
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, RESET + tituloMesa);
+        currentLine++;
+
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, "GARZON: " + order.getServer());
+        currentLine++;
+
+        String time = java.time.format.DateTimeFormatter.ofPattern("HH:mm")
+                .format(java.time.LocalDateTime.now());
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, "HORA: " + time);
+        currentLine++;
+
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, "--------------------------------");
+        currentLine++;
+
+        // --- 2. IMPRIMIR PRODUCTOS ---
+        for (OrderItem item : order.getItems()) {
+            String line = item.getQuantity() + " x " + item.getName();
+            // Usamos currentLine dinámico para no perder el índice
+            printer.printTextWrap(currentLine, currentLine + 1, 1, 48, BIG_TEXT + line);
+            currentLine++;
+        }
+
+        // --- 3. CIERRE VISUAL ---
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, NORMAL_TEXT + "--------------------------------");
+        currentLine++;
+
+        // --- 4. AVANCE DE PAPEL (FEED) ---
+        // Imprimimos líneas vacías para empujar el texto fuera del cabezal hacia la cuchilla.
+        // Si tu impresora sigue cortando texto, aumenta feedLines a 5 o 6.
+        for (int i = 0; i < feedLines; i++) {
+            printer.printTextWrap(currentLine, currentLine + 1, 1, 48, "");
+            currentLine++;
+        }
+
+        // --- 5. CORTE DE PAPEL ---
+        // El corte ocurre al final exacto del avance.
+        String PAPER_CUT = "\u001B\u0069";
+        printer.printTextWrap(currentLine, currentLine + 1, 1, 48, PAPER_CUT);
+
+        // --- PROCESO DE IMPRESIÓN (Igual que antes) ---
+        printer.toFile("impresion_cocina.txt");
+
+        try {
+            inputStream = new FileInputStream("impresion_cocina.txt");
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+            return;
+        }
+
+        PrintService printService = PrintServiceLookup.lookupDefaultPrintService();
+
+        if (printService != null) {
+            DocFlavor docFlavor = DocFlavor.INPUT_STREAM.AUTOSENSE;
+            DocPrintJob docPrintJob = printService.createPrintJob();
+            Doc doc = new SimpleDoc(inputStream, docFlavor, null);
+
+            try {
+                docPrintJob.print(doc, null);
+            } catch (PrintException e) {
+                e.printStackTrace();
+            }
+        } else {
+            System.out.println("Error: No se encontró una impresora predeterminada.");
+        }
+    }
 
 
     public List<StoredOrder> getOrders_command() {
-
         return orderDAO.fetchOrdersFromDatabase_Command();
     }
 
     public List<StoredOrder> getOrders() {
-
         return orderDAO.fetchOrdersFromDatabase();
     }
 
-    // Cambiar de void a Integer
     public Integer AddOrderToBD(TableOrder order, boolean isTable) {
-        // Capturamos el ID que retorna el DAO
         Integer newId = orderDAO.addOrderToDatabase_Command(order, isTable, utils.getDateTime());
         return newId;
     }
@@ -409,18 +494,9 @@ public class PrinterConnection {
         return total;
     }
 
-    /**
-     * Prints the header of the receipt.
-     *
-     * @param printer the PrinterMatrix instance
-     */
     private void printHeader(PrinterMatrix printer) {
-        // COMANDOS ESC/POS
-        // \u001B\u0040 = ESC @ = Inicializar impresora (Borra configuraciones previas)
-        // \u001D\u0021\u0000 = GS ! 0 = Forzar tamaño de texto a Normal
         String INIT_AND_NORMAL = "\u001B\u0040\u001D\u0021\u0000";
 
-        // Agregamos los comandos ANTES del texto del nombre del restaurante
         printer.printTextWrap(1, 2, 10, 48,
                 INIT_AND_NORMAL + " - " + "RESTAURANT "+ utils.RESTAURANT_NAME.toUpperCase() +
                         " -" +
@@ -431,36 +507,20 @@ public class PrinterConnection {
         printer.printTextWrap(4, 5, 1, 48, utils.RESTAURANT_PHONE);
     }
 
-    /**
-     * Formats and prints the current date on the receipt.
-     *
-     * @param printer the PrinterMatrix instance
-     */
     private void formatDate(PrinterMatrix printer) {
         String formattedDate = LocalDate.now()
-                                        .format(DateTimeFormatter.ofPattern(
-                                                "dd/MM/yyyy"));
+                .format(DateTimeFormatter.ofPattern(
+                        "dd/MM/yyyy"));
         printer.printTextWrap(6, 7, 1, 19, "FECHA  : " + formattedDate);
     }
 
-    /**
-     * Formats and prints the current time on the receipt.
-     *
-     * @param printer the PrinterMatrix instance
-     */
     private void formatTime(PrinterMatrix printer) {
         String formattedTime = LocalTime.now()
-                                        .format(DateTimeFormatter.ofPattern(
-                                                "HH:mm"));
+                .format(DateTimeFormatter.ofPattern(
+                        "HH:mm"));
         printer.printTextWrap(6, 7, 25, 48, "Hora : " + formattedTime);
     }
 
-    /**
-     * Prints order details on the receipt.
-     *
-     * @param printer the PrinterMatrix instance
-     * @param order   the TableOrder object
-     */
     private void printOrderDetails(PrinterMatrix printer, TableOrder order) {
         printer.printTextWrap(7, 8, 1, 10, "MESA   :");
         printer.printTextWrap(7, 8, 11, 48, order.getTableName());
@@ -473,13 +533,6 @@ public class PrinterConnection {
         printer.printTextWrap(13, 14, 39, 48, "------");
     }
 
-    /**
-     * Formats and prints the items in the order.
-     *
-     * @param items   the list of OrderItem objects
-     * @param printer the PrinterMatrix instance
-     * @return the updated counter position
-     */
     private int formatOrderItems(ObservableList<OrderItem> items,
                                  PrinterMatrix printer) {
 
@@ -487,46 +540,24 @@ public class PrinterConnection {
 
         for (OrderItem orderItem : items) {
             printer.printTextWrap(counter, counter + 1, 1, 35,
-                                  orderItem.getQuantity() + "x " +
-                                  orderItem.getName());
+                    orderItem.getQuantity() + "x " +
+                            orderItem.getName());
             printer.printTextWrap(counter, counter + 1, 39, 48, "$" +
-                                                                numberFormat.format(
-                                                                        orderItem.getPrice()));
+                    numberFormat.format(
+                            orderItem.getPrice()));
             counter += 1;
         }
         return counter;
     }
 
-
-    private int formatOrderItemsBigger(ObservableList<OrderItem> items, PrinterMatrix printer) {
-        String doubleSize = "\u001D\u0021\u0011"; // Texto en doble tamaño
-        String normalSize = "\u001D\u0021\u0000"; // Restaurar tamaño normal
-        int counter = 6;
-
-        for (OrderItem orderItem : items) {
-            if (orderItem.getName() != null && !orderItem.getName().trim().isEmpty()) {
-                printer.printTextWrap(counter, counter, 1, 35,
-                        doubleSize + orderItem.getQuantity() + "x " + orderItem.getName() + normalSize);
-                counter++;
-            }
-        }
-
-        return counter;
-    }
-
-
-
-
     /**
      * Formats and prints the summary section of the order.
+     * MODIFICADO: Se eliminó el descuento del 5% y sus mensajes.
      *
-     * @param order   the TableOrder object containing order details
-     * @param isTable boolean indicating if the order is for a table
-     * @param printer the PrinterMatrix instance
-     * @param counter the current counter position
+     * @return El número de la última línea impresa.
      */
     private int formatSummary(TableOrder order, boolean isTable,
-                               PrinterMatrix printer, int counter) {
+                              PrinterMatrix printer, int counter) {
         Locale chileLocale = Locale.forLanguageTag("es-CL");
         NumberFormat numberFormat = NumberFormat.getNumberInstance(chileLocale);
 
@@ -576,62 +607,23 @@ public class PrinterConnection {
             currentLine += 2;
         }
 
-        // 4. --- LÓGICA ACTUALIZADA: PAGO EFECTIVO ---
-        if (subTotal > 20000 && !hasRestrictedItems(order)) {
-            int discountCash = (int) (subTotal * 0.05);
-            int totalCash;
-            String labelCash;
-
-            if (isTable) {
-                totalCash = (subTotal - discountCash) + order.getTip();
-                labelCash = "TOTAL EFECTIVO C/PROPINA";
-            } else {
-                totalCash = subTotal - discountCash;
-                labelCash = "TOTAL EFECTIVO";
-            }
-
-            // CAMBIO PRINCIPAL AQUÍ:
-            // 1. Definimos el texto largo
-            String disclaimer = "*** PAGO EFECTIVO (5% DCTO) VALIDO PARA COMPRAS SOBRE 20.000 CLP SIN COLACIONES Y PROMOCIONES ***";
-
-            // 2. Imprimimos usando 3 líneas de altura (currentLine + 3) para que quepa todo
-            printer.printTextWrap(currentLine, currentLine + 3, 1, 48, disclaimer);
-
-            // 3. Avanzamos 3 líneas el cursor para no sobrescribir
-            currentLine += 3;
-
-            // Imprimir Total Efectivo
-            int labelStart = (isTable) ? 5 : 15;
-            printer.printTextWrap(currentLine, currentLine + 1, labelStart, 38, labelCash);
-            printer.printTextWrap(currentLine, currentLine + 1, 39, 48, "$" + numberFormat.format(totalCash));
-
-            currentLine += 2;
-        }
+        // --- ELIMINADO: LÓGICA DE DESCUENTO 5% EFECTIVO ---
+        // Se borró todo el bloque if (subTotal > 20000 && !hasRestrictedItems(order))
         // ---------------------------------------------
 
         // 5. Mensaje Final
         printer.printTextWrap(currentLine, currentLine + 1, 13, 48,
                 "NO VALIDO COMO BOLETA");
 
-
+        // Retornamos la última línea impresa para saber dónde cortar
         return currentLine;
     }
 
-    /**
-     * Verifica si la orden contiene colaciones o menús basándose en el nombre.
-     */
-    private boolean hasRestrictedItems(TableOrder order) {
-        for (OrderItem item : order.getItems()) {
-            if (item.getName() != null) {
-                String name = item.getName().toUpperCase();
-                // Verificamos si el nombre contiene las palabras clave
-                if (name.contains("COLACIONES") || name.contains("PROMOCIONES")) {
-                    return true;
-                }
-            }
-        }
-        return false;
-    }
+
 
 
 }
+
+
+
+

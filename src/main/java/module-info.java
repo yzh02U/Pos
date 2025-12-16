@@ -19,4 +19,6 @@ module com.example.poshaisan {
     requires com.fasterxml.jackson.databind;
     opens com.example.poshaisan to javafx.fxml;
     exports com.example.poshaisan;
+    requires com.zaxxer.hikari;
+    requires org.slf4j;
 }

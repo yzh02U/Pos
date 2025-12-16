@@ -58,7 +58,8 @@ public class Utils {
             String dbName = prop.getProperty("db.name", "pos");
 
             // Construimos la URL completa
-            this.DB_URL = "jdbc:mysql://" + ip + ":" + port + "/" + dbName;
+            this.DB_URL = "jdbc:mysql://" + ip + ":" + port + "/" + dbName
+                    + "?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=UTC";
             this.DB_USER = prop.getProperty("db.user", "root");
             this.DB_PASSWORD = prop.getProperty("db.password", "3812");
 

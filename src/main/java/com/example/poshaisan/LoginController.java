@@ -47,8 +47,27 @@ public class LoginController {
     //  Methods ------------------------------------------
 
     @FXML
-    public void initialize(){
+    public void initialize() {
         restaurantName.setText("Restaurant " + utils.RESTAURANT_NAME);
+
+        // --- INICIO DEL PRE-CALENTAMIENTO ---
+        // Lanzamos un hilo secundario para iniciar la conexión mientras el usuario escribe.
+        Thread prewarmThread = new Thread(() -> {
+            try {
+                // Esto fuerza a HikariCP a crear el pool y abrir las conexiones ahora,
+                // en lugar de esperar a que des clic en el botón.
+                Database.getConnection(utils.DB_URL, utils.DB_USER, utils.DB_PASSWORD).close();
+                System.out.println("Pool de conexiones pre-calentado con éxito.");
+            } catch (Exception e) {
+                // Si falla aquí no importa, el error real saltará cuando el usuario intente loguearse.
+                System.out.println("Intento de pre-calentamiento fallido (no crítico): " + e.getMessage());
+            }
+        });
+
+        // Configuramos como daemon para que no impida cerrar la app si se sale rápido
+        prewarmThread.setDaemon(true);
+        prewarmThread.start();
+        // --- FIN DEL PRE-CALENTAMIENTO ---
     }
     /**
      * Handles the login action.

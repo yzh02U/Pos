@@ -15,6 +15,12 @@ import javafx.scene.layout.Pane;
 import javafx.scene.layout.VBox;
 import javafx.scene.shape.Circle;
 
+
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
+import javafx.application.Platform;
+
 import java.util.*;
 
 /**
@@ -40,6 +46,15 @@ public class SalesController {
                                                                 .getTablesList();
     private final ObservableList<TableOrder> takeouts = TablesList.getInstance()
                                                                 .getTakeoutsList();
+
+
+
+    // Variable para controlar el temporizador y de el refresco automatico de la BD en la vista de ventas
+    private ScheduledExecutorService autoRefreshScheduler;
+
+    // Instancia del DAO para usar en el hilo (puedes reusar la local si la haces global)
+    private final AddOrderDAO orderDAO = new AddOrderDAO();
+
     /*
     @FXML
     AnchorPane TableUI;
@@ -59,7 +74,7 @@ public class SalesController {
      */
     public void initialize() {
         // Display initial labels for existing TableOrder objects
-
+        stopAutoRefresh();
         AddOrderDAO get_order = new AddOrderDAO(utils.DB_URL, utils.DB_USER, utils.DB_PASSWORD);
         Orders = get_order.fetchOrdersFromDatabase_Command();
         tables.clear();
@@ -108,7 +123,112 @@ public class SalesController {
 
         initializeMainLobby();
         initializeTerrace();
+
+        startAutoRefresh();
     }
+
+
+
+
+    /**
+     * Inicia un hilo que se ejecuta cada 15 segundos para actualizar las mesas.
+     */
+    private void startAutoRefresh() {
+        // Si ya existe uno corriendo, lo detenemos para no duplicar
+        if (autoRefreshScheduler != null && !autoRefreshScheduler.isShutdown()) {
+            autoRefreshScheduler.shutdown();
+        }
+
+        autoRefreshScheduler = Executors.newSingleThreadScheduledExecutor();
+
+        // Ejecuta la tarea cada 15 segundos
+        autoRefreshScheduler.scheduleAtFixedRate(() -> {
+            try {
+                // PASO 1: TAREA PESADA (Base de Datos)
+                // Se ejecuta en un hilo secundario. No congela la pantalla.
+                List<StoredOrder> updatedOrders = orderDAO.fetchOrdersFromDatabase_Command();
+
+                // (Opcional) Si necesitas el ID más reciente también:
+                PrinterConnection print = new PrinterConnection();
+                int newLastId = print.Get_Latest_id_from_Command();
+
+                // PASO 2: ACTUALIZAR UI (JavaFX Thread)
+                // Usamos Platform.runLater para volver al hilo principal
+                Platform.runLater(() -> {
+                    refreshTablesUI(updatedOrders, newLastId);
+                });
+
+            } catch (Exception e) {
+                e.printStackTrace();
+                System.out.println("Error en auto-refresh: " + e.getMessage());
+            }
+        }, 0, 9, TimeUnit.SECONDS); // Delay inicial 0s, repite cada 15s
+    }
+
+    /**
+     * Método auxiliar para repintar las mesas sin bloquear la lógica principal.
+     */
+    private void refreshTablesUI(List<StoredOrder> fetchedOrders, int newLastId) {
+        // Actualizamos el ID global
+        this.current_id = newLastId;
+
+        // Limpiamos las listas observables (esto borra los VBox de la pantalla automáticamente)
+        tables.clear();
+        takeouts.clear();
+
+        // Limpiamos los paneles visuales para regenerarlos
+        // (Asumiendo que tablesFlowPane/takeoutsFlowPane se llenan dinámicamente)
+        // Nota: Si usas MesasaOrg (layout fijo), quizás no debas hacer clear() de los hijos,
+        // sino actualizar sus estados. Pero basado en tu código anterior, usas listas observables:
+
+        fetchedOrders.forEach(orden -> {
+            ObservableList<OrderItem> Item = FXCollections.observableArrayList();
+            orden.getItems().forEach(items -> {
+                OrderItem orderItem = new OrderItem(items.getName(), items.getPrice(), items.getQuantity(), items.getId());
+                Item.add(orderItem);
+            });
+
+            if (orden.getIsTable()) {
+                TableOrder Temp_Order = new TableOrder(orden.getId(), Item, orden.getStartDateTime(), orden.getServer(), orden.getTableName());
+                tables.add(Temp_Order);
+            } else {
+                TableOrder Temp_Order = new TableOrder(orden.getId(), Item, orden.getStartDateTime(), orden.getServer(), orden.getTableName());
+                takeouts.add(Temp_Order);
+            }
+        });
+
+        // NOTA IMPORTANTE:
+        // En tu código original, 'initializeMainLobby()' y 'initializeTerrace()' dibujan las mesas
+        // basándose en si existen en la lista 'tables'.
+        // Si tu UI es estática (las mesas siempre están dibujadas y solo cambian de color),
+        // deberías llamar a una función que solo actualice colores.
+        // Si tu UI es dinámica (se borran y crean), entonces:
+
+        MesasaOrg.getChildren().clear(); // Limpia el lobby
+        Terraza.getChildren().clear();   // Limpia la terraza
+        takeoutsFlowPane.getChildren().clear(); // Limpia para llevar
+
+        initializeMainLobby(); // Vuelve a dibujar Lobby con datos nuevos
+        initializeTerrace();   // Vuelve a dibujar Terraza con datos nuevos
+
+        // Re-dibujar Para Llevar
+        takeouts.forEach(order -> takeoutsFlowPane.getChildren().add(createTakeoutUI(order)));
+
+        System.out.println("UI Actualizada automáticamente.");
+    }
+
+    /**
+     * IMPORTANTE: Detener el timer si se cierra la ventana o cambia de vista
+     * para evitar que siga consumiendo recursos fantasma.
+     */
+    public void stopAutoRefresh() {
+        if (autoRefreshScheduler != null && !autoRefreshScheduler.isShutdown()) {
+            autoRefreshScheduler.shutdownNow();
+        }
+    }
+
+    // HASTA AUI ES PARA EL REFRESCO AUTOMATICO DE LA VISTA DE VENTAS
+
 
     /**
      * Loads an order with an empty list of items and the current date and
